@@ -14,3 +14,5 @@ MAKEFILE text eol=crlf
 *.ICO binary
 *.SVG text
 *.RC text eol=crlf
+*.TXT text eol=crlf
+*.CMD text eol=crlf

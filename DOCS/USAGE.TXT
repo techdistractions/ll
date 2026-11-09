@@ -1,5 +1,8 @@
 USING LITELINK
 ==============
+For every LL.INI setting see CONFIG.TXT. For the command line of each
+bundled executable and batch tool see COMMANDS.TXT.
+
 Local shows this computer's exported files; Peer shows the other computer's
 files. Each pane has independent directory navigation. Copy from the selected
 source pane into the folder displayed in the opposite pane.

@@ -1,92 +1,219 @@
-LL.INI CONFIGURATION
-===================
-Keep one LL.INI beside the programs on each computer. It is a local master
-file: DOS and Windows use settings relevant to their own endpoint. DOS tools
-prefer the master beside their EXE, with a current-directory fallback.
+LITE LINK 0.0.13 - LL.INI CONFIGURATION REFERENCE
+=================================================
 
-Every shipped IP address is an example. Samples use:
-  Windows listener  192.168.0.10
-  DOS computer      192.168.0.20
-  Subnet mask       255.255.255.0
-  Gateway / DNS     192.168.0.1
-Replace these with values for your LAN, checking that the DOS address is free.
-NIC I/O addresses are hexadecimal. IPs and TCP/UDP ports are not hexadecimal.
+WHAT THIS FILE DOES
+-------------------
+LL.INI is the per-computer configuration for the Lite Link networking suite.
+The DOS tools use the DOS LL.INI; LLShell32 on Windows uses a DIFFERENT local
+LL.INI. Do not copy the DOS file onto Windows and assume the two endpoints
+require the same settings.
 
-[NETWORK] - DOS HARDWARE / NETWORK
-  NIC=NE2000       NE2000, PICOMEM or 3C509; 3C509B is also an alias.
-  NICBASE=320      Actual hexadecimal I/O base: 320 means 320h.
-  IRQ=3            Card configuration information; LiteLink polls without ISR.
-  IP=192.168.0.20  Unused static DOS IPv4 address.
-  NETMASK=255.255.255.0
-  GATEWAY=192.168.0.1
-  DNS=192.168.0.1
-  TIMEOUT=60       Network timeout, 2..300 seconds.
-  RETRIES=2        Utility retry count, 0..5.
-  RETRYDELAY=3     Utility retry delay in seconds, 0..60.
-  BLOCKSIZE=256    Transfer block size: 128, 256 or 512 bytes.
+The binary package supplies DOS\LL.INI and WINDOWS\LL.INI. The source package
+also includes examples in CONFIG\NE2000.INI, PICOMEM.INI, 3C509.INI and
+WIN31.INI. Choose the example that matches the computer and edit its values.
 
-Use generous timeouts for slow DOS computers. 256-byte blocks are a sensible
-starting point; larger is not necessarily faster on every adapter.
-Windows also reads TIMEOUT and BLOCKSIZE, but uses its OS/provider for local
-IP configuration rather than the DOS NIC/IP settings.
+IMPORTANT PARSING RULE FOR THE DOS LLSHELL MANAGER
+------------------------------------------------
+Use uppercase setting names, uppercase section headers and NO SPACES around
+an equals sign. In particular, write NICBASE=320, not NICBASE = 320. The DOS
+LLShell manager's parser is strict. Lines beginning with ; or # are comments.
+Put sections/values on separate lines. Plain ASCII and CRLF line endings are
+recommended for DOS. Avoid adding unsupported keys to the shared LL.INI.
 
-NE2000 / PICOMEM
-  MACFORMAT=AUTO   PROM decoding: AUTO, PACKED or DOUBLED.
-  MAC=...          Optional station-address override, not normally required.
-NE2000 defaults to AUTO; PICOMEM defaults to PACKED when MACFORMAT is omitted.
-Use an override only for the adapter's correct address, not another device's
-MAC. Match NICBASE to the card/emulator configuration; the sample value does
-not reconfigure the hardware. For a card set to 340h, use NICBASE=340.
+DOS applications first look for LL.INI beside their executable, then in the
+current directory. Windows LLShell32 requires LL.INI beside LLSH32.EXE.
 
-3C509B
-Use NIC=3C509 and the EEPROM-configured NICBASE. The station address is read
-from EEPROM: omit MAC and MACFORMAT. IDPORT=110 is the optional hexadecimal
-ISA activation port (100..1F0 in steps of 10h).
+ADDRESSES AND UNITS
+-------------------
+ * NICBASE and IDPORT are hexadecimal I/O port numbers. 320 means 320h.
+ * IP, NETMASK, GATEWAY, DNS, BIND and HOST are dotted-decimal IPv4 addresses
+   where applicable; [TIME] SERVER and utility targets may be hostnames.
+ * PORT values are decimal TCP/UDP ports, not hexadecimal.
+ * TIMEOUT, RETRYDELAY and PINGWAIT are in seconds.
+ * UTCOFFSET is in minutes. MAXKB is in KiB (1024-byte units).
 
-Use a fixed transceiver selection (TP, AUI or BNC) configured with the card's
-own setup tool. Auto-select is refused. LiteLink does not write EEPROM or
-change connectors automatically. B-generation hardware is required for the
-8-bit ISA operation supported on an XT. Resolve I/O conflicts before running.
+EXAMPLE NETWORK (REPLACE THE ADDRESSES)
+---------------------------------------
+Windows host IP: 192.168.0.10
+DOS machine IP: 192.168.0.20
+Subnet mask:    255.255.255.0
+Gateway/DNS:    192.168.0.1
+LLShell TCP:    21210
 
-DIAGNOSTIC OPTIONS
-PINGWAIT=3 sets an echo wait of 1..60 seconds; PINGCOUNT=4 selects 1..20 probes.
-These are NETDIAG utility settings, not manager connection parameters.
+These are examples, not values which automatically work on your LAN. Find the
+Windows PC's real IPv4 address and choose an UNUSED static address for DOS.
+Lite Link's DOS networking does not provide DHCP.
 
-[SHELL] - DOS MANAGER
-  MODE=MANAGER       Enables the two-pane DOS interface.
-  HOST=192.168.0.10   Windows listener's CURRENT LAN IPv4 address.
-  PORT=21210         Must match the Windows listening port.
-  ROOT=FILES         Export folder, relative to the DOS startup directory.
-  REQUEST=           Leave empty for normal manager use.
-MODE=AGENT is answering-only operation without the interactive manager.
-HOST is a destination address; never set it to 0.0.0.0.
+SET UP WINDOWS FIRST
+--------------------
+1. Copy the binary archive's WINDOWS contents to C:\LITELINK (or a short path).
+2. Create C:\LITELINK\FILES, or choose an existing directory to share.
+3. Edit LL.INI beside LLSH32.EXE with the actual ROOT/LOG paths and port.
+4. Start the Windows network provider first on Windows 3.1 (Win32s by itself
+   is not a Winsock provider). Then start LLSH32.EXE.
+5. Allow inbound TCP connections to its configured port on a trusted LAN.
+6. Record the Windows computer's real LAN IPv4 address. This is the DOS
+   [SHELL] HOST value; do NOT put 0.0.0.0 there.
 
-[EXECUTION] - DOS COMMAND PERMISSION
-  ALLOWRUN=OFF       ON permits arbitrary DOS commands through LLSTART.BAT.
-  JOBMEM=OFF         ON enables transient memory probes; needs AUMON.COM.
-Transfers and browsing do not require ALLOWRUN. Command execution is not
-restricted to ROOT; only enable it for trusted peers.
+WINDOWS LL.INI - EACH LINE
+--------------------------
+[NETWORK]            Windows reads only the two settings below here.
+TIMEOUT=60            Transfer/network inactivity timeout, 2..300 seconds.
+BLOCKSIZE=256         Transfer payload: exactly 128, 256 or 512 bytes.
 
-[TIME] - LLTIME
-  SERVER=time.cloudflare.com   Example SNTP server; choose a reachable server.
-  PORT=123                    UDP destination port.
-  UTCOFFSET=0                 Signed local offset from UTC, in minutes.
-Examples: 0 is UTC, 60 is UTC+1, -300 is UTC-5. Choose the correct current local
-offset before LLTIME /SET. There is no automatic daylight-saving rule database.
-The samples use UTC rather than assuming a local time zone.
+[HOST]               Windows listener settings (not DOS NIC settings).
+BIND=0.0.0.0          Listen on every local IPv4 interface. Alternatively,
+                      use an IPv4 address actually assigned to this PC.
+PORT=21210            TCP listening port, 1..65535. DOS [SHELL] PORT must
+                      match. Do not use a port owned by another program.
+ROOT=C:\LITELINK\FILES Exported directory. It must already exist. Restricts
+                      file-manager browsing, not remote DOS command execution.
+LOG=C:\LITELINK\LLHOST.LOG  Windows listener log file location. Choose an
+                      accessible folder. The default file in source code if
+                      omitted is beside the EXE (AUMGR.LOG); the packaged
+                      sample explicitly selects LLHOST.LOG instead.
 
-[GET] - LLGET
-  MAXKB=16384        Maximum download size in KiB (16384 is 16 MiB).
-URL and destination are command-line arguments. Native TLS/HTTPS is not included.
+Windows reads [HOST] via its Windows INI APIs. It uses Winsock for its IP and
+network card configuration, not DOS NIC/NICBASE/IP/NETMASK settings. The GUI
+can also take command-line overrides; see DOCS\COMMANDS.TXT.
 
-[HOST] - WINDOWS LISTENER
-  BIND=0.0.0.0
-  PORT=21210
-  ROOT=C:\LITELINK\FILES
-  LOG=C:\LITELINK\LLHOST.LOG
-BIND is all local interfaces or a specific assigned IPv4 address. ROOT must
-exist and be a directory. Use absolute ROOT/LOG paths appropriate to that
-computer. Keep paths short and 8.3-compatible on Windows 3.1.
+SET UP DOS
+----------
+1. Copy the binary archive's DOS contents to C:\LITELINK on the DOS computer.
+2. Create C:\LITELINK\FILES.
+3. Copy CONFIG\NE2000.INI, CONFIG\PICOMEM.INI or CONFIG\3C509.INI to
+   C:\LITELINK\LL.INI, replacing the sample. Retain all required sections.
+4. Edit the actual card base, unique static IP and correct network addresses.
+5. Set [SHELL] HOST to the Windows PC's actual LAN IPv4 address, and PORT to
+   the same port configured under Windows [HOST].
+6. Leave [EXECUTION] ALLOWRUN=OFF initially. File transfers still work.
+7. From C:\LITELINK run LLNIC, then NETDIAG ARP/PING/TCP as appropriate.
+   Close each utility before starting the next one: only one DOS program may
+   own the NIC at once. Then run LLSTART.BAT for the file manager.
 
-The Windows sample is also provided as CONFIG\WIN31.INI. It configures the
-Windows endpoint and is not a replacement for the DOS network configuration.
+DOS [NETWORK] - EVERY PACKAGED KEY
+---------------------------------
+[NETWORK]             Network and native Ethernet hardware configuration.
+NIC=NE2000            Adapter backend: NE2000, PICOMEM, 3C509 or 3C509B.
+                       3C509B is an accepted alias for 3C509.
+NICBASE=320            I/O address in HEX. Must match the hardware. Parser
+                       range 200h..3E0h, aligned to 10h; NE2000/PICOMEM
+                       must also be aligned to 20h. Does NOT set the card.
+IRQ=3                  Card's configured IRQ for reference only. DOS Lite
+                       Link polls the hardware and does not install an IRQ
+                       handler; this setting is not used for delivery.
+MACFORMAT=AUTO         NE2000 PROM interpretation: AUTO, PACKED or DOUBLED.
+                       NE2000 defaults AUTO if omitted; PICOMEM defaults
+                       PACKED if omitted. Omit on the 3C509B backend.
+MAC=02:11:22:33:44:55  OPTIONAL six-byte station MAC override. Normally
+                       OMIT. If set it must be a valid unicast MAC and must
+                       really belong to the adapter; do not duplicate a LAN
+                       MAC. Do not use an override for 3C509B.
+IDPORT=110             OPTIONAL 3C509 ISA activation port, in HEX. Range
+                       100h..1F0h in 10h steps. Default 110h if omitted.
+                       Not normally needed for NE2000 or PICOMEM.
+IP=192.168.0.20       Unique STATIC IPv4 address for this DOS computer.
+NETMASK=255.255.255.0  DOS IPv4 subnet mask. Match your actual LAN.
+GATEWAY=192.168.0.1   Router address for destinations outside local subnet.
+                       Required by DOS parser even if you only use the LAN.
+DNS=192.168.0.1       DNS server for DOS tools which resolve names. The
+                       diagnostic/utility parser defaults to GATEWAY when
+                       DNS is omitted. The DOS LLShell manager accepts but
+                       does not use this setting for its IPv4 HOST address.
+TIMEOUT=60            Network timeout in seconds; range 2..300.
+RETRIES=2             Utility retry count: range 0..5. The DOS LLShell
+                       manager separately accepts 0..100. Use 0..5 in a
+                       shared LL.INI for compatibility.
+RETRYDELAY=3          Initial utility retry delay in seconds; range 0..60.
+                       DOS LLShell uses this for reconnect waiting/backoff.
+BLOCKSIZE=256         Transfer payload, exactly 128, 256 or 512 bytes.
+                       Start with 256; raising it may not improve speed.
+
+NIC-SPECIFIC ADVICE
+-------------------
+NE2000: Use the card's actual hardware base and MACFORMAT=AUTO initially.
+PicoMEM: Use NIC=PICOMEM and MACFORMAT=PACKED as in its example.
+3C509B: Use NIC=3C509 with the EEPROM-configured base. Omit MAC/MACFORMAT.
+         Configure a FIXED TP, AUI or BNC transceiver using the 3Com setup
+         utility beforehand; auto-selection is refused. Requires the
+         B-generation card for XT-compatible 8-bit access. Lite Link does
+         not change EEPROM settings or transceiver choice.
+
+DOS [SHELL] - EACH LINE
+-----------------------
+[SHELL]                 DOS LLShell endpoint and file-manager settings.
+MODE=MANAGER            MANAGER gives the interactive two-pane DOS interface.
+                        AGENT gives answering-only operation without that UI.
+HOST=192.168.0.10       Destination WINDOWS PC's actual LAN IPv4 address.
+                        Must be a dotted IPv4 literal for DOS LLShell; do
+                        not use 0.0.0.0, a DNS hostname or the DOS IP here.
+PORT=21210              Destination Windows listener TCP port (1..65535).
+ROOT=FILES              DOS exported directory, relative to the DOS starting
+                        directory in this example. Folder must exist; a
+                        path can be up to 63 characters in the parser.
+REQUEST=                Normally blank. An optional DOS 8.3 filename on
+                        Windows to request automatically on connection.
+                        Leave empty for ordinary file-manager sessions.
+
+DOS [EXECUTION] - EACH LINE
+---------------------------
+[EXECUTION]             Permission and remote-command diagnostics.
+ALLOWRUN=OFF            OFF (recommended default) blocks remote DOS command
+                        jobs. ON allows commands submitted from Windows or
+                        DOS interface to execute through LLSTART.BAT.
+                        Commands are NOT confined to ROOT and are NOT
+                        authenticated. Use only on a trusted network.
+JOBMEM=OFF              ON adds pre/post command memory snapshots using
+                        AUMON.COM; OFF disables the optional measurements.
+                        JOBMEM=ON requires AUMON.COM alongside DOS tools.
+
+DOS [TIME] - EACH LINE
+----------------------
+[TIME]                  Settings used by LLTIME.EXE.
+SERVER=time.cloudflare.com  Example SNTP server hostname; use one which is
+                        reachable and resolvable from DOS.
+PORT=123                SNTP server UDP port, typically 123 (1..65535).
+UTCOFFSET=0             Current fixed offset from UTC in signed MINUTES.
+                        0 = UTC; 60 = UTC+1; -300 = UTC-5.
+                        Parser accepts -720..+840 minutes. There is no
+                        automatic daylight saving adjustment. Verify the
+                        proposed clock before using LLTIME /SET.
+
+DOS [GET] - EACH LINE
+---------------------
+[GET]                   Settings for LLGET.EXE (also NETDIAG GET body cap).
+MAXKB=16384             Maximum response body size in KiB; 16384=16 MiB.
+                        Accepted numeric range is 1..65535. It is not an
+                        upload or NIC memory limit. LLGET is HTTP-only.
+
+OTHER KEYS FOUND IN 0.0.13 SOURCE - COMPATIBILITY NOTES
+--------------------------------------------------------
+PINGWAIT=3 and PINGCOUNT=4: NETDIAG's utility parser recognizes these under
+[NETWORK] (wait 1..60 seconds; probe count 1..20). HOWEVER the DOS LLShell
+manager's parser does not accept them. They must NOT be added to a master
+LL.INI shared with LLShell in 0.0.13. With the shipped shared configuration,
+NETDIAG uses its built-in wait of 3 seconds and four probes.
+
+RUNTIMEOUT and OUTPUTLIMIT: DOS LLShell accepts these numeric keys but only
+parses/discards their values in this release. They are not effective remote
+command limits. Do not use them as a security control.
+
+VERIFY THE CONNECTION
+---------------------
+From the DOS installation folder, with LLShell NOT running:
+  LLNIC
+  NETDIAG ARP 192.168.0.10
+  NETDIAG PING 192.168.0.10
+  NETDIAG TCP 192.168.0.10 21210
+
+Replace the target IP/port with your real Windows listener values. An ICMP
+ping failure does not always mean TCP will fail (firewalls may block ICMP).
+Once checked, launch LLSTART.BAT on DOS. For every option on every executable,
+see DOCS\COMMANDS.TXT. For file-manager keys, see DOCS\USAGE.TXT.
+
+SECURITY / OPERATIONAL LIMITS
+-----------------------------
+The 0.0.13 stack has no authentication, encryption, native HTTPS or DHCP
+client on DOS. Keep it on a trusted network, back up your LL.INI and do not
+expose its file-transfer/command ports to untrusted networks. Only one DOS
+Lite Link program or other driver may own the NIC at a time.

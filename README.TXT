@@ -1,10 +1,12 @@
 LITELINK 0.0.13
 ==============
-File transfer and remote DOS commands for DOS and Windows.
+Lite Link (LL) is an experimental micro-networking SUITE for DOS, designed for
+8088-class computers with 256 KB RAM or more. Instead of a conventional
+resident network driver and full stack, it uses a native register-level NIC
+backend and a compact TCP/UDP implementation for LAN/Internet networking.
 
-LiteLink provides two-pane file managers, tagged file selection, recursive
-folder copying, a DOS clock utility and an HTTP downloader. The DOS manager
-exits completely while a remote command runs, then reconnects when it ends.
+LLShell is ONE application in the suite, not Lite Link itself. The bundled
+utilities share the lightweight networking foundation; more may be added.
 
 CHOOSE A PACKAGE
   LITELINK-0.0.13-BINARY.ZIP  Programs, configuration examples and user guides.
@@ -90,8 +92,18 @@ Windows must exit normally and return to DOS before LiteLink can resume. For
 unattended jobs, the deployed application or command sequence must arrange that
 exit and save its own results. LiteLink does not remain running to close Windows.
 
-UTILITIES
-Stop the DOS manager before manually running another program using that NIC.
+COMPLETE SUITE (0.0.13 PACKAGE)
+  LLSHELL.EXE    DOS dual-pane file manager and remote command endpoint.
+  LLSH32.EXE     Windows file manager and TCP listener.
+  LLGET.EXE      HTTP downloader; optional expected CRC32, no native HTTPS.
+  LLTIME.EXE     SNTP clock check/set utility.
+  LLNIC.EXE      Native NIC/MAC hardware initialization probe.
+  NETDIAG.EXE    MAC, loopback, ARP, ping, TCP and basic HTTP diagnostics.
+  AUMON.COM      Transient binary memory monitor for command supervision.
+  LLSTART.BAT    DOS manager supervisor, needed for remote commands.
+  LLDEBUG.BAT    Diagnostic log collector.
+
+Stop the DOS manager before manually running another tool using the NIC.
   LLNIC
   NETDIAG ARP 192.168.0.10
   NETDIAG PING 192.168.0.10
@@ -99,8 +111,11 @@ Stop the DOS manager before manually running another program using that NIC.
   LLTIME /CHECK
   LLTIME /SET
   LLGET http://example.com/file.zip NEWFILE.ZIP
-LLTIME defaults to check-only. Configure its server and local UTC offset before
-using /SET. LLGET supports HTTP, not native HTTPS; existing files are preserved.
+  LLDEBUG 192.168.0.10 21210
+
+See DOCS\COMMANDS.TXT for EVERY utility's exact command-line syntax and
+DOCS\CONFIG.TXT for EVERY LL.INI setting (Windows and DOS). Addresses above
+are examples only. LLTIME is check-only by default; /SET changes DOS time.
 
 UPGRADING
 Close the managers before copying new EXEs. Keep your working LL.INI and shared
@@ -139,7 +154,8 @@ flags, resource handling and troubleshooting are in DOCS\BUILD.TXT.
 
 DOCUMENTATION
   DOCS\INSTALL.TXT  Installation, upgrades and directory layout.
-  DOCS\CONFIG.TXT   LL.INI settings and NIC selection.
+  DOCS\CONFIG.TXT   All LL.INI settings and step-by-step setup.
+  DOCS\COMMANDS.TXT Command-line reference for all bundled tools.
   DOCS\USAGE.TXT    File management, utilities and remote commands.
   DOCS\TROUBLE.TXT  Connection errors, logs and interrupted jobs.
   DOCS\LIMITS.TXT   Filename, path and recovery limits.

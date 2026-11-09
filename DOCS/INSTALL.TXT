@@ -1,5 +1,8 @@
 INSTALLING LITELINK
 ==================
+For a line-by-line LL.INI setup use CONFIG.TXT. For every executable
+command-line option and example use COMMANDS.TXT.
+
 Use the binary ZIP to run the programs. Use the source ZIP to build them.
 The example installation directory C:\LITELINK is eight characters long and
 works with DOS 8.3 path conventions. Use another short path if preferred.

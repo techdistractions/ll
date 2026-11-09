@@ -1,0 +1,248 @@
+LITE LINK 0.0.13 - COMPLETE COMMAND-LINE REFERENCE
+==================================================
+
+ABOUT THESE COMMANDS
+--------------------
+The Lite Link suite provides a shared native DOS networking backend and
+several standalone programs. There is no separate resident LL TCP/IP service
+to load before running the tools. Each DOS program initializes and closes
+the selected NIC itself. Only one DOS NIC-owning program should run at a time.
+
+Examples below use the sample Windows host 192.168.0.10, TCP port 21210 and
+C:\LITELINK. Substitute your actual values. Run DOS commands from the DOS
+installation folder unless a command explicitly says otherwise.
+
+QUICK COMMAND INDEX
+-------------------
+  LLSTART.BAT                       Run/supervise the DOS LLShell manager.
+  LLSHELL.EXE                       Start DOS manager directly (no supervisor).
+  LLNIC.EXE                         Probe card I/O, PROM/MAC and initialization.
+  NETDIAG.EXE [command]             Run hardware or network diagnostics.
+  LLTIME.EXE [/CHECK | /SET]         Read or set the DOS clock via SNTP.
+  LLGET.EXE URL FILE [/CRC32=...]    Download a new file via plain HTTP.
+  LLDEBUG.BAT IP TCPPORT             Collect a diagnostic report.
+  AUMON.COM FILE                    Write a binary memory snapshot.
+  LLSH32.EXE [options]              Start the Windows file manager/listener.
+
+1. LLSTART.BAT - NORMAL DOS MANAGER STARTUP
+-------------------------------------------
+Syntax:
+  LLSTART
+
+Starts LLSHELL.EXE under the DOS batch supervisor. This is the recommended
+way to use the file manager, especially when [EXECUTION] ALLOWRUN=ON.
+The batch sets AUSUP=1, optionally captures an initial AUMON.COM snapshot,
+launches LLSHELL.EXE and, when a remote command is accepted, executes the
+saved AUJOB.BAT. It then deletes that batch and restarts LLShell.
+
+There are no documented command-line arguments. Run it in the installation
+directory; the batch assumes LLSHELL.EXE (and optionally AUMON.COM) is there.
+A remote DOS command is submitted through the LLShell/LLShell32 interfaces,
+not by passing the command text as arguments to LLSTART.
+
+2. LLSHELL.EXE - DOS MANAGER / AGENT
+----------------------------------
+Syntax:
+  LLSHELL
+
+Starts the DOS endpoint in [SHELL] MODE=MANAGER (interactive) or MODE=AGENT
+(answering-only). It reads LL.INI and connects to [SHELL] HOST and PORT.
+No public command-line options are implemented by the DOS manager in 0.0.13.
+
+Running LLSHELL directly is suitable for browsing/file transfers, but remote
+DOS command execution depends on the LLSTART batch supervisor. It is not a
+resident packet driver or background service. Exit with F10 in manager mode.
+
+3. LLNIC.EXE - HARDWARE PROBE
+----------------------------
+Syntax:
+  LLNIC
+
+Opens and identifies the selected NIC, reports MAC and adapter diagnostics,
+then closes it. Uses [NETWORK] from LL.INI. It does NOT test ARP, IP or TCP.
+The command takes NO arguments. Appends a report to LLNIC.LOG.
+A successful LLNIC test means that basic NIC initialization worked, not that
+another host is reachable. Stop the DOS manager before invoking LLNIC.
+
+4. NETDIAG.EXE - NETWORK DIAGNOSTICS
+----------------------------------
+Syntax / supported commands:
+  NETDIAG
+  NETDIAG MAC
+  NETDIAG LOOP
+  NETDIAG ARP host
+  NETDIAG PING host
+  NETDIAG TCP host port
+  NETDIAG GET http://host[:port]/path [NEWFILE.TXT]
+
+NETDIAG (no arguments) or MAC:
+  Inspect NIC initialization and the adapter MAC. No reachability test.
+
+NETDIAG LOOP:
+  Run internal TX/RX NIC loopback and register checks. This is for NE2000
+  and its PicoMEM-compatible emulation. Not supported by the 3C509B backend.
+  A LOOP pass does NOT prove the external LAN cable/Wi-Fi works.
+
+NETDIAG ARP 192.168.0.10:
+  Resolve the destination and verify next-hop ARP. A remote destination may
+  be reached via the configured gateway. This is not an ICMP or TCP test.
+
+NETDIAG PING 192.168.0.10:
+  Resolve the target and send four ICMP echo probes by default. The tool
+  reports received replies, elapsed ticks and TTL. A command PASS requires
+  all configured probes to reply, so partial responses can return FAIL.
+  The shipped shared LL.INI must not include PINGWAIT/PINGCOUNT; see CONFIG.TXT.
+
+NETDIAG TCP 192.168.0.10 21210:
+  Attempt a TCP connection to that IPv4 target and DECIMAL port. LLShell32
+  must already be listening. A successful TCP test does not guarantee that a
+  subsequent Lite Link protocol session will succeed.
+
+NETDIAG GET http://example.com/file.txt CHECK.TXT:
+  Basic HTTP/1.0 diagnostic request. Optional NEWFILE.TXT saves a new DOS
+  8.3 file; without an output name the HTTP body is printed to the console.
+  This test does not implement redirects or chunked response bodies and is
+  NOT the recommended downloader. Use LLGET for normal downloads and CRC
+  verification. Plain HTTP only; do not use it for sensitive information.
+
+NETDIAG appends diagnostic output to NETDIAG.LOG. NETDIAG commands are
+subcommands, not /switches. Target hosts can be IPv4 literals or hostnames
+where the native DNS path is supported. Stop LLShell before using NETDIAG.
+
+5. LLTIME.EXE - SNTP CLOCK
+-------------------------
+Syntax:
+  LLTIME
+  LLTIME /CHECK
+  LLTIME /SET
+
+No switch and /CHECK are identical: query the configured [TIME] SERVER:PORT,
+show DOS time and the proposed local date/time, but DO NOT change the clock.
+/SET queries the server, applies [TIME] UTCOFFSET in signed minutes, sets
+DOS date/time and checks readback. Adjust UTCOFFSET manually for daylight
+saving changes; there is no automatic timezone/DST database.
+
+Examples:
+  LLTIME /CHECK
+  LLTIME /SET
+
+LLTIME appends to LLTIME.LOG and returns PASS/FAIL. It changes only the clock
+when /SET is used. Network time is unauthenticated in this release. Stop
+LLShell before running LLTIME.
+
+6. LLGET.EXE - HTTP FILE DOWNLOAD
+--------------------------------
+Syntax:
+  LLGET http://host[:port]/path NEWFILE.EXT
+  LLGET http://host[:port]/path NEWFILE.EXT /CRC32=1234ABCD
+
+URL            Must begin with http://. Native HTTPS is NOT supported.
+NEWFILE.EXT    New output filename in DOS 8.3 form, without path. Existing
+               output files are preserved; the downloader will not replace
+               them. Names must use supported DOS characters.
+/CRC32=...     Optional EXPECTED 8-hex-digit CRC32 supplied by the user, not
+               a request to print a CRC. Use an independently verified CRC;
+               1234ABCD above illustrates the syntax only.
+
+Examples:
+  LLGET http://example.com/archive.zip ARCHIVE.ZIP
+  LLGET http://example.com/archive.zip ARCHIVE.ZIP /CRC32=1234ABCD
+
+Uses [GET] MAXKB to limit downloaded bytes; stages to LLGET.$$$, checks data,
+reads the staged file back and then commits the destination. Follows up to
+five supported absolute/root-relative HTTP redirects. Supports
+Content-Length and chunked bodies; rejects compressed bodies. Appends
+output to LLGET.LOG. If a server redirects to HTTPS, the download fails
+because the native client has no TLS. The CRC example is not an actual known
+hash. Stop LLShell before using LLGET.
+
+7. LLDEBUG.BAT - MULTI-STAGE TROUBLESHOOTING
+-------------------------------------------
+Syntax:
+  LLDEBUG target-IP target-TCP-port
+
+Example:
+  LLDEBUG 192.168.0.10 21210
+
+Run from the DOS Lite Link installation directory, with LLShell stopped.
+LL.INI, LLNIC.EXE and NETDIAG.EXE must be present. The batch allocates an
+unused LLDB01..LLDB20 directory, copies the configuration, performs adapter
+and network checks (including two ARP requests, ping and TCP), and collects
+individual logs into LLDEBUG.TXT. It also attempts a convenience report copy
+in the invoking directory. A completed report does NOT mean all tests PASS.
+
+The target IP and port are REQUIRED; LLDEBUG does not infer them from
+[SHELL]. Review the collected LL.INI before sharing diagnostics publicly.
+
+8. AUMON.COM - MEMORY SNAPSHOT (SUPPORT TOOL)
+---------------------------------------------
+Syntax:
+  AUMON output-file
+
+Example:
+  AUMON MEMBASE.BIN
+
+Writes a binary memory/MCB diagnostic snapshot to the specified file. The
+single argument is a DOS path up to 62 characters, with an 8.3 filename.
+It is intended for the [EXECUTION] JOBMEM=ON supervisor snapshots and
+for troubleshooting; it does NOT open the NIC, test networking or display
+a human-readable memory report. LLSTART.BAT invokes AUMON automatically
+for its initial MEMBASE.BIN if AUMON.COM is available; JOBMEM=ON adds
+additional pre/post command samples. No LL.INI settings are needed when
+AUMON is invoked directly.
+
+9. LLSH32.EXE - WINDOWS LISTENER AND FILE MANAGER
+------------------------------------------------
+Normal launch (recommended):
+  LLSH32.EXE
+
+Requires LL.INI beside the executable. Reads [HOST] BIND, PORT, ROOT, LOG
+and [NETWORK] TIMEOUT/BLOCKSIZE. The export ROOT directory must exist.
+On Windows 3.1 start your Winsock provider before LLSH32.EXE. LLShell32
+runs as a windowed application; the DOS endpoint initiates the connection.
+
+Public command-line overrides implemented in the shipped GUI:
+  LLSH32.EXE --root C:\LITELINK\FILES
+  LLSH32.EXE --log C:\LITELINK\LLHOST.LOG
+  LLSH32.EXE --port 21210
+  LLSH32.EXE --bind 192.168.0.10
+  LLSH32.EXE --minimized
+  LLSH32.EXE --quiet-errors
+
+--root PATH       Override the exported directory. It must exist.
+--log PATH        Override the log filename/path; directory must be writable.
+--port NUMBER     Override the decimal listening port, 1..65535.
+--bind IPv4       Override bind interface. 0.0.0.0 = all local interfaces.
+--minimized       Open the Windows manager minimized.
+--quiet-errors    Suppress startup-error message boxes (errors are logged).
+
+The four value-taking options support either --name VALUE or --name=VALUE.
+Quote paths containing spaces when supported by the Windows environment;
+for Windows 3.1, prefer short 8.3-compatible paths.
+
+Legacy positional override form (accepted, but named options are clearer):
+  LLSH32.EXE ROOT LOG PORT [BIND-IP]
+
+For example:
+  LLSH32.EXE C:\LITELINK\FILES C:\LITELINK\LLHOST.LOG 21210
+
+Development/test-only parser options:
+  --selftest SCRIPT   Starts an internal GUI script/test path (not a user
+                      networking command; not suitable for normal sessions).
+  --script SCRIPT     Parsed for internal script-driven operation. Do not
+                      depend on it for normal LLShell32 GUI operation.
+  --listen-only       Parsed in GUI builds, but the GUI does not enter the
+                      non-GUI TCP-only diagnostic loop. Do not rely on it.
+
+Do not confuse these with supported user-facing features or a DOS web server.
+
+COMMON REMINDERS
+----------------
+* DOS uses register-level NIC access. Do NOT start multiple NIC owners at once.
+* The DOS LL.INI and Windows LL.INI are different files on different PCs.
+* Configured IPs/ports are examples; set the real addresses for your LAN.
+* LLShell's F8 Command field is an INTERACTIVE operation, not an EXE flag.
+* ALLOWRUN=ON permits arbitrary commands; only enable it on a trusted LAN.
+* DNS, HTTP and SNTP are plaintext and not authenticated/encrypted.
+* Use DOCS\USAGE.TXT for UI keys/copy/resume behavior and DOCS\CONFIG.TXT
+  for every LL.INI setting.

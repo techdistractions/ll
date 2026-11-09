@@ -1,84 +1,106 @@
-# LiteLink
+# Lite Link (LL)
 
-File transfer and remote DOS commands for DOS and Windows. LiteLink combines
-an 80-column DOS file manager with a Windows two-pane manager, plus utilities
-for time synchronization and HTTP downloads.
+**Experimental micro-networking for DOS and XT-class computers.**
 
-- Tag multiple files and folders; copy in either direction.
-- Browse, create and rename directories; copy folder contents recursively.
-- Preserve existing files and verify transferred data before committing it.
-- Run DOS commands remotely: the DOS manager exits while the command runs,
-  then restarts and reconnects automatically.
-- Share one local `LL.INI` among the tools on each computer.
+## What it is
+
+Lite Link (LL) is an experimental micro-networking suite for DOS, designed for systems with 8088 CPUs and 256 KB RAM or more.
+
+Rather than relying on a conventional resident network driver and full networking stack, LL uses register-level hardware access and a lightweight, minimal TCP/UDP implementation to communicate over a local network or the Internet.
+
+Lite Link provides a common networking foundation for a growing suite of tools and utilities, designed to bring useful networking capabilities to early DOS computers without the overhead of traditional networking software.
+
+## The Lite Link suite
+
+### Applications
+
+| Tool | Purpose |
+| --- | --- |
+| **LLShell (`LLSHELL.EXE`)** | DOS dual-pane file manager. Browse and transfer files between DOS and Windows, manage directories, copy folder trees and submit remote DOS commands. |
+| **LLShell32 (`LLSH32.EXE`)** | Windows graphical file manager and network listener. Runs on Windows 3.1 with Win32s/Winsock and on modern Windows. |
+
+### Network utilities
+
+| Tool | Purpose |
+| --- | --- |
+| **LLGet (`LLGET.EXE`)** | Download files via HTTP with bounded redirects and optional expected CRC32 checking. HTTPS/TLS is not included. |
+| **LLTime (`LLTIME.EXE`)** | Query an SNTP server, display a proposed date/time or set the DOS clock. |
+| **LLNIC (`LLNIC.EXE`)** | Probe and initialize supported native network hardware and report MAC/configuration details. |
+| **NETDIAG (`NETDIAG.EXE`)** | Inspect NIC hardware, run NE2000 loopback, check ARP, ICMP ping, TCP connections and basic HTTP. |
+
+### Support tools
+
+| Tool | Purpose |
+| --- | --- |
+| **AUMON (`AUMON.COM`)** | Transient DOS memory-snapshot helper for remote-command supervision and diagnostics. |
+| **LLSTART (`LLSTART.BAT`)** | DOS supervisor for LLShell. Unloads the manager while remote commands execute, then restarts it. |
+| **LLDEBUG (`LLDEBUG.BAT`)** | Collect network diagnostics and logs into a separate report directory. |
+
+Lite Link is intended to grow beyond these tools. LLShell is **one application within the suite**, not the networking foundation itself.
+
+## Supported systems
+
+| DOS computer | Windows computer |
+| --- | --- |
+| DOS 3.3 or later | Windows 3.1 with Win32s 1.1 and a compatible Winsock provider, or modern Windows |
+| 8086/8088-compatible processor (8088-class design target) | TCP/IP connection to the DOS computer |
+| 256 KB RAM or more (project design target) | `LLSH32.EXE` Windows manager/listener |
+| NE2000-compatible adapter, PicoMEM NE2000 emulation or 3Com 3C509B | Configured local IPv4 networking |
+
+DOS tools use a direct polled NIC backend; they do **not** require a resident packet driver. Stop other software using the same NIC while running an LL tool. The DOS network configuration uses static IPv4 rather than DHCP.
 
 ## Downloads
 
-Use the files attached to a release:
-
 | Package | Contents |
 | --- | --- |
-| `LITELINK-0.0.13-BINARY.ZIP` | Ready-to-run DOS/Windows programs, examples and user guides |
-| `LITELINK-0.0.13-SOURCE.ZIP` | Source, configuration examples, guides and the Watcom build |
+| `LITELINK-0.0.13-BINARY.ZIP` | Ready-to-run DOS and Windows programs, examples and user guides |
+| `LITELINK-0.0.13-SOURCE.ZIP` | Source, examples, documentation and Open Watcom build files |
 
-Release 0.0.13 contains LLShell32 0.0.13, DOS LLShell 0.0.12 and utilities
-0.0.11r1. The Windows update adds an embedded icon and fixes path-label repainting.
+Release 0.0.13 includes LLShell32 **0.0.13**, DOS LLShell **0.0.12** and the networking utilities **0.0.11r1**. The component version banners are intentionally different.
 
-## Requirements
+## Getting started
 
-**DOS:** DOS 3.3+, an 8086-compatible processor, and a supported NE2000-compatible
-adapter, PicoMEM NE2000 emulation or 3C509B. The apps use native polling without
-a resident packet driver. Stop other software using the same card.
+1. **Windows:** Extract the `WINDOWS` contents from the binary release into a directory such as `C:\LITELINK`. Create `C:\LITELINK\FILES`. Edit `LL.INI` beside `LLSH32.EXE`: set `[HOST] ROOT`, `LOG`, `BIND` and `PORT`. Start the Winsock provider first if using Windows 3.1, then run `LLSH32.EXE`.
+2. **DOS:** Extract the `DOS` contents to `C:\LITELINK` and create a `FILES` folder. Choose the matching sample from `CONFIG` (`NE2000.INI`, `PICOMEM.INI` or `3C509.INI`) and save it as `LL.INI` beside the executables. Set `[NETWORK]` for your actual adapter and LAN, and `[SHELL] HOST` to the Windows computer's **real** LAN IPv4 address.
+3. **Test and connect:** With LLShell not running, use `LLNIC`, `NETDIAG ARP`, `NETDIAG PING` and `NETDIAG TCP` as needed. Then start the DOS manager with `LLSTART.BAT` from its installation directory.
 
-**Windows:** the same `LLSH32.EXE` runs on Windows 11 x64 and Windows 3.1 with
-Win32s 1.1 and an existing Winsock provider such as Trumpet. Start the provider
-before LiteLink on Windows 3.1. Operating systems and network providers are not
-included. The native Windows host does not require an emulator.
+```dos
+C:
+CD \LITELINK
+LLNIC
+NETDIAG ARP 192.168.0.10
+NETDIAG TCP 192.168.0.10 21210
+LLSTART
+```
 
-## Quick start
+The addresses above are examples only. Choose an unused static DOS IP and use the Windows listener's actual IP and port. **Do not copy the same LL.INI to both computers**: DOS and Windows use different settings.
 
-1. Copy `WINDOWS/` from the binary package into `C:\LITELINK` on Windows and
-   create `C:\LITELINK\FILES`. Edit `[HOST]` in `LL.INI` beside the EXE, then
-   start `LLSH32.EXE`. The sample listens on TCP port 21210.
-2. Copy `DOS/` into `C:\LITELINK` on DOS and create its `FILES` folder. Copy a
-   matching `CONFIG/` example as `LL.INI`. Set the actual NIC base, DOS network
-   addresses and the Windows listener's IP under `[SHELL] HOST`.
-3. From the DOS installation directory, run `LLSTART.BAT`.
+For an explanation of **every shipped and optional `LL.INI` key**, see [Configuration Reference](DOCS/CONFIG.TXT). For **every executable and command-line operation**, see [Command-Line Reference](DOCS/COMMANDS.TXT).
 
-The sample addresses are placeholders for a private LAN: Windows
-`192.168.0.10`, DOS `192.168.0.20`, gateway/DNS `192.168.0.1`. Replace them with
-settings appropriate to your network. Each endpoint keeps its own `LL.INI`.
+## Using LLShell
 
-Tab changes pane on DOS; Space/Insert tags entries; F5 copies to the opposite
-pane. On Windows use Ctrl-click/Ctrl+A and F5. Enter/double-click opens folders;
-Backspace goes up. Existing files are preserved; folder contents merge.
+The DOS and Windows file managers show local and remote files. Select a source pane and copy to the folder in the opposite pane. Directory copies include subdirectories and empty folders. Existing destination files are preserved rather than silently overwritten.
 
-Remote commands require `[EXECUTION] ALLOWRUN=ON` and the DOS batch supervisor.
-For example, run `DIR > LISTING.TXT`, wait for reconnection, then copy the result
-back. Windows applications launched through DOS must exit Windows normally
-before DOS supervision can resume.
+On DOS, **Tab** switches panes, **Space/Insert** tags files, **F5** copies, **F2** refreshes, **F8** enters a command and **F10** exits. On Windows, select multiple items with Ctrl-click/Ctrl+A; **F5** copies and **F4** retries a paused queue.
+
+Remote DOS commands require `[EXECUTION] ALLOWRUN=ON` and DOS startup through `LLSTART.BAT`. The DOS manager exits while the command executes and reconnects afterward. Remote commands are not restricted to the shared-file directory, so leave this feature disabled unless needed on a trusted network.
 
 ## Documentation
 
-- [Plain-text quick start](README.TXT)
+- [Configuration reference: every LL.INI line, Windows and DOS setup](DOCS/CONFIG.TXT)
+- [Command-line reference: every bundled executable/batch utility](DOCS/COMMANDS.TXT)
 - [Installation and upgrades](DOCS/INSTALL.TXT)
-- [Configuration and NICs](DOCS/CONFIG.TXT)
-- [File manager, utilities and commands](DOCS/USAGE.TXT)
-- [Troubleshooting](DOCS/TROUBLE.TXT)
-- [Limits and recovery behavior](DOCS/LIMITS.TXT)
+- [File manager keys, file transfers and remote commands](DOCS/USAGE.TXT)
+- [Troubleshooting and collecting diagnostic reports](DOCS/TROUBLE.TXT)
+- [Filename, transfer and recovery limits](DOCS/LIMITS.TXT)
+- [Build guide](DOCS/BUILD.TXT)
+- [Developer notes](DOCS/DEVELOP.md)
+- [Protocol details](DOCS/PROTOCOL.md)
 
-The source release also includes `DOCS/BUILD.TXT`, `DOCS/DEVELOP.md` and
-`DOCS/PROTOCOL.md` for compilation and maintenance.
+## Build from source
 
-## Building
+The source archive builds with Open Watcom (DOS and Win32 targets). See [the build guide](DOCS/BUILD.TXT) for host requirements and exact build commands. Generated programs are written to `OUT/`.
 
-Use Open Watcom with both DOS and Win32 targets. From the source root, set
-`WATCOM=C:\WATCOM` and run `BUILD nt64` in Windows x64 Command Prompt. For a
-DOS-hosted build, add `%WATCOM%\BINW` to PATH and run `BUILD` from DOS on a
-suitable 386+ build machine. Programs appear in `OUT/`.
+## Security and limitations
 
-The build uses WMAKE, WCC/WCC386, WASM, WRC and WLINK. No Python, PowerShell,
-source generator or image converter is required. The checked-in icon is
-embedded in the Windows EXE at build time.
-
-Use a trusted LAN: LiteLink does not provide authentication or encryption.
-LLGet is HTTP-only. See the guides for DOS filename/path limits and queue recovery.
+Lite Link 0.0.13 is experimental and intended for a **trusted LAN**. It does not authenticate peers or encrypt transfers, provides no native HTTPS/TLS support and does not offer a DOS DHCP client. CRC checks detect accidental corruption; they are not cryptographic authentication. Do not expose command execution or shared folders to an untrusted network.
