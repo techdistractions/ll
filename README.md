@@ -97,6 +97,20 @@ Remote DOS commands require `[EXECUTION] ALLOWRUN=ON` and DOS startup through `L
 - [Developer notes](DOCS/DEVELOP.md)
 - [Protocol details](DOCS/PROTOCOL.md)
 
+## AI-Assisted Development
+
+Lite Link is an experimental, predominantly AI-coded software project developed with OpenAI Codex.
+
+The project's architecture, design goals, feature requirements and development direction are human-led, while much of the implementation, debugging and code generation is performed using AI.
+
+Development includes testing on real vintage hardware, including original IBM XT-class 8088 systems, alongside emulated DOS and Windows environments.
+
+Lite Link is also an experiment in how effectively modern AI-assisted development techniques can produce useful, efficient software for hardware dating back to the early 1980s.
+
+As an experimental project, AI-generated code should not be assumed to be free of defects. Community testing, feedback and contributions are welcome.
+
+**AI development assistance:** OpenAI Codex.
+
 ## Build from source
 
 The source archive builds with Open Watcom (DOS and Win32 targets). See [the build guide](DOCS/BUILD.TXT) for host requirements and exact build commands. Generated programs are written to `OUT/`.
