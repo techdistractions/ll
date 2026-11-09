@@ -29,5 +29,3 @@ AI-generated code may contain defects. Testing, reports and community contributi
 Lite Link 0.0.13 is intended for trusted local networks. It does not authenticate peers or encrypt traffic, and it has no native HTTPS/TLS or DOS DHCP client. Do not expose remote command execution or file shares to untrusted networks.
 
 Component version banners differ: LLShell32 is 0.0.13, DOS LLShell is 0.0.12, and the networking utilities are 0.0.11r1.
-
-**Release status:** These notes are prepared for the upcoming GitHub Release. Release ZIPs and checksums must be regenerated and verified against the final source before publication.
