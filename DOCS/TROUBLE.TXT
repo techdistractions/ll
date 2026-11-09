@@ -1,0 +1,74 @@
+TROUBLESHOOTING
+===============
+Check one layer at a time. Stop LLShell on DOS before manually running another
+program on the same NIC. Keep the Windows listener running for a TCP test.
+
+1. WINDOWS LISTENER
+Start LLSH32.EXE with LL.INI beside it. If startup fails, read the displayed
+stage, error source and numeric code, plus LLSTART.LOG beside the EXE and the
+configured host log. Verify that ROOT exists and LOG can be created.
+
+BIND must be 0.0.0.0 or an address assigned to this PC. A busy port requires
+closing its current owner or choosing another port on both endpoints. On
+modern Windows, netstat -an can independently show a LISTENING TCP entry.
+If a firewall blocks access, allow the configured inbound TCP port on the
+appropriate trusted/private network. LiteLink does not change firewall rules.
+
+Windows 3.1 also needs its Winsock provider running before LiteLink. Check that
+provider's own IP configuration and documentation. Installing Win32s alone
+does not configure networking.
+
+2. HARDWARE / MAC
+Run LLNIC. If initialization fails, verify NIC selection, actual I/O base,
+connector/cable and conflicting drivers or I/O devices. A polling-only / IRQ
+not installed message is expected. Do not confuse it with a failed adapter.
+A valid MAC is necessary but does not prove the target can be reached.
+
+3. ARP
+  NETDIAG ARP 192.168.0.10
+Use the actual Windows IP. If ARP resolution fails, check the target's current
+address, mask, cable/link and network isolation. With multiple PC adapters,
+use the address on the LAN connected to DOS. Do not assume an old DHCP address
+is still assigned. A zero next-hop MAC means ARP has not resolved.
+
+4. ICMP
+  NETDIAG PING 192.168.0.10
+No echo response alone does not prove TCP is unavailable; some peers filter
+ICMP. Continue to a TCP test if ARP succeeds.
+
+5. TCP
+  NETDIAG TCP 192.168.0.10 21210
+The listener must already be running. Confirm the same port on both ends and
+check firewall/provider access. A TCP success does not by itself establish a
+LiteLink protocol session; start LLSTART.BAT afterward.
+
+COMMON MESSAGES
+Invalid/missing LL.INI: place the edited master beside the programs. Check for
+a hidden .TXT extension, malformed values and an INI sample for the wrong OS.
+NIC already active / code 421: another program may own the adapter. Stop it
+or clean-boot without its packet driver; do not run two NIC owners together.
+Network error 1460: a network operation timed out. Use the hardware/ARP/TCP
+steps to identify the failing stage rather than repeatedly changing timeouts.
+Destination exists: files are intentionally preserved. Choose a new name or
+verify/remove the old file yourself before retrying.
+Queue paused: check disk space/write permissions, the same peer/folders and
+then explicitly resume. Do not delete journals while a copy is active.
+
+COLLECTING A LOG
+From the DOS installation folder with LLShell stopped:
+  LLDEBUG 192.168.0.10 21210
+It creates an unused LLDB01..LLDB20 folder and writes diagnostic results,
+including a copy of LL.INI. The target IP/port must be supplied explicitly.
+Check the resulting report before sharing it because it includes your settings.
+Normal logs include AGENT.LOG, LLGET.LOG, LLTIME.LOG and NETDIAG.LOG.
+
+INTERRUPTED COMMAND AFTER A CRASH OR REBOOT
+Stop both managers and inspect the DOS job state before retrying. Acceptance
+alone does not tell you whether a command ran before a crash. Do not blindly
+repeat a command with side effects.
+
+To deliberately abandon an interrupted job, preserve the installation folder's
+AUJOB.DAT, AUJOB.BAT and AUDONE.TXT outside that folder, then remove the original
+copies and restart LLSTART.BAT. Also preserve related host/agent logs. This
+clears recovery state; it does not undo whatever the command already did.
+Do not perform this reset while the manager or a command is running.

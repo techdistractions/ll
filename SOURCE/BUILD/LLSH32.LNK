@@ -1,0 +1,13 @@
+format windows nt
+runtime windows=3.10
+option quiet
+option start=_entry
+option map=OUT\LLSH32.MAP
+option stack=65536
+option heapsize=16384
+option osversion=3.10
+name OUT\LLSH32.EXE
+file OUT\HOST.OBJ
+libpath '%WATCOM%\lib386\nt'
+library kernel32.lib,wsock32.lib,user32.lib,gdi32.lib
+option resource=OUT\LLSH32.RES

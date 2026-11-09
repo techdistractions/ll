@@ -1,0 +1,5 @@
+u16 diag_stage,diag_arp_tx,diag_arp_rx,diag_rx,diag_dns_tx,diag_tcp_tx,diag_ping_seq,diag_ping_reply,diag_ping_ttl,diag_ping_bytes;
+u16 diag_tx_reads,diag_tx_matches,diag_tx_mismatch,diag_tx_expect,diag_tx_actual,diag_tx_last_len,diag_tx_data_len,diag_tx_source;
+u16 diag_tx_done,diag_tx_error,diag_tx_timeout,diag_tx_isr,diag_tx_tsr,diag_tx_cr,diag_tx_loop,diag_loop_result,diag_loop_rxbytes,diag_arp_saved;
+u32 diag_loop_length;
+u8 diag_tx_ram[1536],diag_loop_frame[60],diag_loop_rx[1536],diag_arp_samples[112];

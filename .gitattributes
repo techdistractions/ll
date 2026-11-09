@@ -1,0 +1,16 @@
+* text=auto
+*.BAT text eol=crlf
+MAKEFILE text eol=crlf
+*.LNK text eol=crlf
+*.CCF text eol=crlf
+*.EXE binary
+*.COM binary
+*.PNG binary
+*.INI text eol=crlf
+*.C text eol=crlf
+*.H text eol=crlf
+*.ASM text eol=crlf
+*.INC text eol=crlf
+*.ICO binary
+*.SVG text
+*.RC text eol=crlf

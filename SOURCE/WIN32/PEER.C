@@ -1,0 +1,19 @@
+/* LiteLink source guide:
+ * DOS-originated operations serviced during explicit Windows-granted turns.
+ * Included by GUI.INC. peerfolder is distinct from the GUI local folder.
+ * Save/restore basedir around a peer operation; never start an unsolicited DOS turn.
+ */
+/* Serialized peer turns: Windows grants each DOS-originated transaction. */
+static DWORD last_turn,last_directory_update;
+static int peer_cancelled,peer_gui_dirty;
+static int peer_path(char*out,const char*rel){unsigned n=slen(localbase);if(n+slen(rel)+2>=239)return 0;textcopy(out,localbase);if(rel[0]){out[n++]='\\';textcopy(out+n,rel);}return 1;}
+static int peer_list(void){WIN32_FIND_DATAA f;HANDLE h;char q[260];u8 e[22];unsigned count=0;if(slen(basedir)>235)return statusout(RESULT,INVALID);textcopy(q,basedir);textcopy(q+slen(q),"\\*.*");h=FindFirstFileA(q,&f);if(h==INVALID_HANDLE_VALUE){DWORD error=GetLastError();return statusout(RESULT,error==ERROR_FILE_NOT_FOUND||error==ERROR_NO_MORE_FILES?OK:IOERR);}do{if(valid(f.cFileName)&&!(f.dwFileAttributes&0x400)){if(++count>4096){FindClose(h);return statusout(RESULT,IOERR);}zero(e,22);textcopy((char*)e,f.cFileName);set32(e+13,f.nFileSizeLow);e[17]=(u8)f.dwFileAttributes;FileTimeToDosDateTime(&f.ftLastWriteTime,(WORD*)(e+18),(WORD*)(e+20));if(!frameout(ENTRY,e,22)){FindClose(h);return 0;}}}while(FindNextFileA(h,&f));FindClose(h);return statusout(RESULT,OK);}
+static int peer_poll(void){u8 req[124];unsigned n,op,a;char name[13],other[13],saved[260],full[260],dest[260],rel[64],command[121];int k,st=OK,ok=1;DWORD attrs;if(!remote_interactive||peer==INVALID_SOCKET)return 1;if(!frameout(LL_POLL,(u8*)peerfolder,slen(peerfolder)+1))return 0;k=framein();if(k==LL_IDLE&&plen==0)return 1;if(k!=LL_CLIENT||plen<1||plen>124)return 0;n=plen;copy(req,payload,n);op=req[0];if(op==LL_TREE){peer_gui_dirty=1;return win_tree_server(req+1,n-1);}name[0]=other[0]=0;if(op==JOB_SUBMIT){if(n<3||n>122||req[n-1])return 0;copy(command,req+1,n-1);for(a=0;a<n-2;a++)if((u8)command[a]<32||(u8)command[a]>126)return 0;ok=jobcommand(command);peer_state_changed=1;if(ok){remoterel[0]=0;peer_gui_dirty=1;gui_status(exec_description);}return ok||!transport_failed;}
+ if(op==QUIT){frameout(QUIT,0,0);lost();return 1;}if(op==LL_CANCEL){tree_findclose();peer_cancelled=1;return statusout(RESULT,OK);}if(op!=LIST){a=1;while(a<n&&req[a])a++;if(a==n||a-1>12)return 0;copy(name,req+1,a);if(op==RENAME){if(n-a-1<2||n-a-1>13||req[n-1])return 0;copy(other,req+a+1,n-a-1);if(!valid(other))return statusout(RESULT,INVALID);}else if(a+1!=n)return 0;if(!valid(name)&&!(op==CHDIR&&navname(name)))return statusout(RESULT,INVALID);}
+ textcopy(saved,basedir);if(!peer_path(full,peerfolder))return 0;textcopy(basedir,full);
+ if(op==LIST)ok=peer_list();else if(op==GET){st=sendfile(name,name,0,0);if(st<0)ok=0;else if(st==MISSING||st==IOERR||st==INVALID)ok=statusout(RESULT,(u16)st);peer_gui_dirty=1;}
+ else if(op==PUT){k=framein();if(k==RESULT&&plen==2)ok=1;else if(k!=PUT)ok=0;else ok=recvfile(0)||!transport_failed;peer_gui_dirty=1;}
+ else if(op==CHDIR){textcopy(rel,peerfolder);if(!descend(rel,name)||!peer_path(dest,rel))st=INVALID;else{attrs=GetFileAttributesA(dest);if(attrs==0xffffffffUL||!(attrs&FILE_ATTRIBUTE_DIRECTORY)||(attrs&0x400))st=IOERR;else textcopy(peerfolder,rel);}ok=statusout(RESULT,(u16)st);}
+ else if(op==MKDIR){if(!path(dest,name)||!CreateDirectoryA(dest,0))st=IOERR;ok=statusout(RESULT,(u16)st);peer_gui_dirty=1;}
+ else if(op==RENAME){if(!path(full,name)||!path(dest,other))st=INVALID;else if(GetFileAttributesA(dest)!=0xffffffffUL)st=EXISTS;else if(!MoveFileA(full,dest))st=IOERR;ok=statusout(RESULT,(u16)st);peer_gui_dirty=1;}
+ else if(op==AU_DELETE){if(!path(full,name)||!DeleteFileA(full))st=IOERR;ok=statusout(RESULT,(u16)st);peer_gui_dirty=1;}else ok=statusout(RESULT,INVALID);textcopy(basedir,saved);return ok;}

@@ -1,0 +1,11 @@
+/OUT/
+*.OBJ
+*.MAP
+*.LST
+*.LOG
+LLQUEUE.*
+LLVIEW.*
+LLJOB.*
+AUJOB.*
+AUDONE.TXT
+*.RES

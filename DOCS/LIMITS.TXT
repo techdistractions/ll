@@ -1,0 +1,39 @@
+LIMITS AND RECOVERY BEHAVIOR
+===========================
+Names: DOS 8.3 names. Long/unrepresentable Windows names are skipped/reported.
+Paths: tree-copy paths are export-relative and limited to 63 characters.
+Traversal: at most 16 directory levels and 4096 real children per directory.
+Display: 128 DOS / 256 Windows entries per pane, including . and ... Selected
+folder traversal uses paged scans independently of the pane display limit.
+Directories: recursive copying includes empty folders; directories merge.
+Files: existing destinations are preserved; overwrite is not automatic.
+Deletion: confirmed file deletion, not recursive folder deletion.
+Metadata: recursive copy does not promise preservation of timestamps/attributes.
+Links: Windows symlinks/reparse points/junctions are not traversed.
+
+Integrity checks detect bad sequences, lengths and CRCs. Temporary output is
+committed only after successful verification. CRC is not cryptographic
+protection. Do not modify source directories during a recursive copy.
+
+Queue recovery is whole-file, not byte-offset resume. A lost final reply can
+leave a valid destination which retry then reports as already existing.
+There is no all-or-nothing rollback of an entire directory tree.
+
+Remote commands require a working DOS batch supervisor and ALLOWRUN=ON. No
+LiteLink process or network allocation remains while that command runs.
+A crash/reboot is not proof of completed work; automatic exactly-once replay
+across arbitrary power loss is not guaranteed. See TROUBLE.TXT before clearing
+interrupted records or rerunning commands which change files.
+
+LLGet is HTTP-only. LLTime uses SNTP and an explicit fixed UTC offset, with no
+automatic daylight-saving database. Both utilities require exclusive access
+to the DOS NIC while running.
+
+The current Windows executable targets Windows 3.1/Win32s and Windows 11 with
+classic APIs. Other Windows versions/providers and every compatible card
+revision/connector are not individually qualified. Use the diagnostics on your
+hardware. Runtime support does not imply the build tools run on the same CPU.
+
+Use a trusted LAN. There is no peer authentication, encryption or native TLS.
+The shared-file root bounds file-manager access; enabled arbitrary DOS command
+execution is not a sandbox. Leave ALLOWRUN=OFF unless you need it.

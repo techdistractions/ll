@@ -1,0 +1,127 @@
+BUILDING LITELINK FROM SOURCE
+============================
+The SOURCE ZIP includes all application source, static linker response files,
+a MAKEFILE and BUILD.BAT. It does not include operating systems, a compiler,
+network-provider DLLs or prebuilt application EXEs.
+
+TOOLS
+Use a complete Open Watcom installation with both DOS and Win32 targets:
+  WMAKE           Make tool.
+  WCC             16-bit DOS C compiler.
+  WCC386          32-bit Windows C compiler.
+  WASM            MASM-compatible assembler.
+  WRC             Windows resource compiler.
+  WLINK           DOS and PE linker.
+
+Required directories beneath the Watcom root:
+  binw            DOS-hosted tools and DOS4GW.EXE.
+  binnt64         Native Windows x64 tools, if building on Windows x64.
+  binnt           Native 32-bit Windows tools, if using that host.
+  h and h\nt      Common and Win32 headers.
+  lib286\dos      DOS libraries, including clibs.lib.
+  lib386\nt       Win32 import libraries.
+
+The build uses Watcom-specific pragma wrappers. Another C compiler or NASM is
+not a drop-in replacement. No Python, PowerShell or image converter is needed.
+The checked-in ICO is the icon build input; SVG artwork is included for editing.
+
+HOST REQUIREMENTS
+DOS-hosted compilation uses protected-mode tools: use a suitable 386+ build
+computer with extended memory and the supplied DOS extender. The resulting DOS
+apps still use 8086 instructions. Use the DOS prompt on a Windows 3.1-era build
+machine rather than assuming the compiler is a Win32s application.
+
+Windows 11 x64 runs the BINNT64 tools. It cannot execute BINW's DOS tools
+directly. For portability, use short compiler/source paths without spaces.
+
+EXACT COMMANDS - WINDOWS X64 COMMAND PROMPT
+1. Extract the source ZIP preserving directories into C:\LLSRC.
+2. Install Open Watcom separately, for example in C:\WATCOM.
+3. Open Command Prompt and run:
+     SET WATCOM=C:\WATCOM
+     C:
+     CD \LLSRC
+     BUILD nt64
+
+Replace the Watcom path with your actual installation. BUILD.BAT supplies the
+common/Win32 INCLUDE paths. The native tool directory is selected explicitly;
+PATH is not needed to find BINNT64 tools. Use BUILD nt for installed BINNT tools.
+
+EXACT COMMANDS - DOS HOST
+With the same short paths, at a DOS prompt:
+  SET WATCOM=C:\WATCOM
+  SET PATH=C:\WATCOM\BINW;%PATH%
+  C:
+  CD \LLSRC
+  BUILD
+DOS4GW must be on PATH. Ensure there is free disk space for objects and maps.
+Do not run this DOS-hosted command directly in a Windows x64 prompt.
+
+SELECT TARGETS
+  BUILD                     DOS-hosted, all programs.
+  BUILD dos                 DOS-hosted, DOS programs only.
+  BUILD windows             DOS-hosted, Windows program only.
+  BUILD nt64                Native x64 host, all programs.
+  BUILD nt64 dos            Native x64 host, DOS programs only.
+  BUILD nt64 windows        Native x64 host, Windows program only.
+The nt host accepts the same optional dos/windows targets.
+
+OUTPUT / DEPLOYMENT
+Successful all-target builds print Build complete. OUT contains:
+  LLSHELL.EXE   DOS manager.
+  LLGET.EXE     DOS HTTP downloader.
+  LLTIME.EXE    DOS time utility.
+  LLNIC.EXE     DOS NIC probe.
+  NETDIAG.EXE   DOS network diagnostic.
+  AUMON.COM     Optional transient memory probe.
+  LLSH32.EXE    Universal Windows manager.
+  LLSTART.BAT   Copied by the DOS target.
+OBJ, MAP and RES files are intermediate/debug build products. BUILD.LOG records
+make diagnostics. Read the first compiler/linker error if a build stops; stale
+EXEs from a previous build do not prove the new build succeeded.
+
+Install the DOS outputs with SOURCE\DOS\LLSTART.BAT in the DOS installation
+folder. SOURCE\DOS\LLDEBUG.BAT is an optional log collector. Install LLSH32.EXE
+on Windows. Create the shared FILES directories and edit the CONFIG samples as
+LL.INI on each endpoint. Keep an existing working LL.INI during upgrades.
+Compilation does not install programs or change the host network configuration.
+
+Re-running BUILD rebuilds targets. For a clean build, close any program using
+OUT, remove only that source tree's OUT directory and build again.
+
+BUILD DETAILS
+MAKEFILE is for Watcom WMAKE. SOURCE\BUILD contains static WLINK response files
+and HOST.CCF, a compiler response file avoiding DOS command-line length limits.
+Assembly conditionals select manager, utility and diagnostic transport variants;
+there is no generated-source step.
+
+DOS: WCC uses -bt=dos -0 -ms -s -zl. Custom assembly provides startup, network
+wrappers and DOS system helpers. WLINK produces DOS EXEs with a 4096-byte stack.
+Utility targets link clibs.lib arithmetic helpers; AUMON links as a DOS COM.
+
+Windows: WCC386 uses -bt=nt -3r -s -zl and defines GUI, LITELINK and
+LEGACY_WIN32S. WLINK selects a Windows PE GUI with OS/subsystem version 3.10,
+custom _entry, 65536-byte stack and 16384-byte heap. Import libraries are
+KERNEL32, WSOCK32, USER32 and GDI32. Do not drop LEGACY_WIN32S or add modern
+imports without checking runtime compatibility. Never enable LL_TEST for a
+release build.
+
+WRC builds SOURCE\WIN32\LLSH32.RC and LLICON.ICO into OUT\LLSH32.RES. WLINK
+embeds it into the EXE, so no icon file is required at runtime. LLICON.SVG is
+editable artwork; the existing ICO is sufficient to compile.
+
+REPRODUCIBILITY
+Linkers can stamp PE/COFF and resource directories with the build time.
+Different compiler hosts/versions can also change layout or instruction
+encoding. Compare program behavior and relevant code/data, not just a raw hash
+of separately linked EXEs. Shipped archive manifests cover the exact supplied
+files and can be checked independently.
+
+BUILD ERRORS
+Missing tools: check WATCOM and the selected BINW/BINNT/BINNT64 directory.
+Missing headers: check h and h\nt and run BUILD.BAT from the source root.
+Missing __U4D / __U4M / __I4M: check lib286\dos\clibs.lib and library paths.
+Missing Windows imports: check lib386\nt and the complete Win32 target install.
+Missing WRC/resource: check wrc.exe and LLICON.ICO; do not flatten SOURCE folders.
+DOS extender error: check CPU, extended memory and DOS4GW on PATH.
+Cannot write EXE: close the running program or build in another source folder.

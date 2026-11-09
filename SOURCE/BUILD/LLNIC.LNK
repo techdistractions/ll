@@ -1,0 +1,10 @@
+format dos
+option quiet
+option stack=4096
+option start=start
+order clname CODE clname DATA clname BSS clname STACK
+option map=OUT\LLNIC.MAP
+name OUT\LLNIC.EXE
+file OUT\LLNET.OBJ,OUT\NIC.OBJ
+libpath '%WATCOM%\lib286\dos'
+library clibs.lib

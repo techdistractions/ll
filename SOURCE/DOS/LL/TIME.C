@@ -1,0 +1,24 @@
+/* LiteLink source guide:
+ * LLTime SNTP client. /CHECK is default; only /SET changes DOS date/time.
+ * Validate reply source, nonce, mode/stratum and supported calendar range first.
+ * Linked with the generated LLNET adapter; owns the NIC only while running.
+ */
+#include "COMMON.C"
+static int setdate(u16,u16);static int settime(u16,u16);static u16 getyear(void);static u16 getmd(void);static u16 gethm(void);static u16 getsh(void);
+#pragma aux setdate="mov ax,2b00h" "int 21h" "xor ah,ah" parm [cx] [dx] value [ax] modify [ax];
+#pragma aux settime="mov ax,2d00h" "int 21h" "xor ah,ah" parm [cx] [dx] value [ax] modify [ax];
+#pragma aux getyear="mov ah,2ah" "int 21h" value [cx] modify [ax cx dx];
+#pragma aux getmd="mov ah,2ah" "int 21h" value [dx] modify [ax cx dx];
+#pragma aux gethm="mov ah,2ch" "int 21h" value [cx] modify [ax cx dx];
+#pragma aux getsh="mov ah,2ch" "int 21h" value [dx] modify [ax cx dx];
+static int leap(unsigned y){return !(y%4)&&(y%100||!(y%400));}
+static unsigned monthdays(unsigned y,unsigned m){static u8 days[]={31,28,31,30,31,30,31,31,30,31,30,31};return days[m-1]+(m==2&&leap(y));}
+static void dec2(char*s,unsigned n){s[0]=(char)('0'+n/10);s[1]=(char)('0'+n%10);}
+static void datestr(char*s,unsigned y,unsigned m,unsigned d,unsigned hh,unsigned mm,unsigned ss){s[0]='0'+y/1000;s[1]='0'+(y/100)%10;s[2]='0'+(y/10)%10;s[3]='0'+y%10;s[4]='-';dec2(s+5,m);s[7]='-';dec2(s+8,d);s[10]=' ';dec2(s+11,hh);s[13]=':';dec2(s+14,mm);s[16]=':';dec2(s+17,ss);s[19]=0;}
+static u32 be32(const u8*p){return ((u32)p[0]<<24)|((u32)p[1]<<16)|((u32)p[2]<<8)|p[3];}
+static int validate(void){unsigned i,version=(ll_ntp_reply[0]>>3)&7;if((ll_ntp_reply[0]&7)!=4||(version!=3&&version!=4)||(ll_ntp_reply[0]>>6)==3||ll_ntp_reply[1]==0||ll_ntp_reply[1]>15)return 0;for(i=0;i<8;i++)if(ll_ntp_reply[24+i]!=ll_ntp_request[40+i])return 0;if(!be32(ll_ntp_reply+40)&&!be32(ll_ntp_reply+44))return 0;return 1;}
+int __cdecl ll_main(void){unsigned attempt,i,y,m,d,hh,mm,ss;u16 begin,rtt,oldy,oldmd,oldhm,oldsh;u32 sec,days,tod;int ok=0,setting=0;char date[24];lf=logopen("LLTIME.LOG");if(lf<0)lf=create("LLTIME.LOG");if(lf>=0)seekend(lf);say("LiteLink LLTime 0.0.11r1 - SNTP, 8086, DOS 3.3+");args();if(ac>1||(ac&&!(ieq(av[0],"/CHECK")||ieq(av[0],"/SET")))){say("Usage: LLTIME [/CHECK | /SET] ; server and UTC offset from LL.INI");goto done;}if(ac&&ieq(av[0],"/SET"))setting=1;if(!config()||!timeserver[0]){say("Invalid LL.INI or missing [TIME] SERVER.");goto done;}datestr(date,getyear(),getmd()>>8,getmd()&255,gethm()>>8,gethm()&255,getsh()>>8);cp(line,"DOS before: ");cp(line+len(line),date);say(line);say("Stop LLShell/AUTOUAT and other NIC programs before LLTime.");cp(host,timeserver);port=ll_ntp_port;
+ for(attempt=0;attempt<=retries;attempt++){setup();for(i=0;i<48;i++)ll_ntp_request[i]=0;ll_ntp_request[0]=0x23;begin=net_ticks();for(i=0;i<8;i++)ll_ntp_request[40+i]=(u8)((begin>>(i&7))^(i*37)^ip[i&3]^(getsh()&255));val("SNTP attempt=",attempt+1);say(host);if(!ll_prepare()){begin=net_ticks();if(!ll_ntp()&&validate()){rtt=net_ticks()-begin;ok=1;break;}say("No valid matching SNTP reply.");}else{val("Network failure code=",word(3884));nic_report();}net_close();if(attempt<retries)waitretry(attempt);}
+ net_close();if(!ok)goto done;val("Server stratum=",ll_ntp_reply[1]);val("Round trip BIOS ticks=",rtt);sec=be32(ll_ntp_reply+40);if(sec>=2208988800UL)sec-=2208988800UL;else sec+=2085978496UL;if(ll_ntp_reply[44]&128)sec++;sec+=(u32)(rtt/36);if(sec<315532800UL||sec>4102444799UL){say("SNTP date outside supported 1980-2099 range.");ok=0;goto done;}sec+=(long)tzoffset*60L;if(sec<315532800UL||sec>4102444799UL){ok=0;goto done;}days=sec/86400UL;tod=sec%86400UL;y=1970;while(days>=(u32)(365+leap(y))){days-=365+leap(y);y++;}m=1;while(days>=monthdays(y,m)){days-=monthdays(y,m);m++;}d=(unsigned)days+1;hh=(unsigned)(tod/3600UL);mm=(unsigned)((tod%3600UL)/60UL);ss=(unsigned)(tod%60UL);datestr(date,y,m,d,hh,mm,ss);cp(line,"Network local date/time: ");cp(line+len(line),date);say(line);val("UTC offset magnitude minutes=",tzoffset<0?-tzoffset:tzoffset);say(tzoffset<0?"Offset is west of UTC.":"Offset is east of/equal to UTC.");
+ if(!setting){datestr(date,getyear(),getmd()>>8,getmd()&255,gethm()>>8,gethm()&255,getsh()>>8);cp(line,"DOS after check: ");cp(line+len(line),date);say(line);say("CHECK ONLY - DOS date and time unchanged.");goto done;}oldy=getyear();oldmd=getmd();oldhm=gethm();oldsh=getsh();if(setdate(y,(m<<8)|d)||settime((hh<<8)|mm,ss<<8)){setdate(oldy,oldmd);settime(oldhm,oldsh);say("DOS rejected clock update; previous values restored where possible.");ok=0;}else{u16 md=getmd(),hm=gethm(),sh=getsh();if(getyear()!=y||md!=((m<<8)|d)||(hm>>8)!=hh||(hm&255)!=mm){say("Clock readback mismatch.");ok=0;}else{datestr(date,getyear(),md>>8,md&255,hm>>8,hm&255,sh>>8);say(date);say("DOS date/time SET and readback PASS. No resident software installed.");}}
+ done:say(ok?"LLTIME PASS":"LLTIME FAIL");if(lf>=0)cl(lf);return ok?0:1;}

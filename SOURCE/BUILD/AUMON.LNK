@@ -1,0 +1,4 @@
+format dos com
+option quiet
+name OUT\AUMON.COM
+file OUT\AUMON.OBJ

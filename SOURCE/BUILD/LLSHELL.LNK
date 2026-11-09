@@ -1,0 +1,8 @@
+format dos
+option quiet
+option stack=4096
+option start=start
+order clname CODE clname DATA clname BSS clname STACK
+option map=OUT\LLSHELL.MAP
+name OUT\LLSHELL.EXE
+file OUT\SHELLNET.OBJ,OUT\AGENT.OBJ,OUT\SYSTEM.OBJ

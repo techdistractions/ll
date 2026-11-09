@@ -1,0 +1,66 @@
+INSTALLING LITELINK
+==================
+Use the binary ZIP to run the programs. Use the source ZIP to build them.
+The example installation directory C:\LITELINK is eight characters long and
+works with DOS 8.3 path conventions. Use another short path if preferred.
+
+WINDOWS
+1. Copy WINDOWS contents into the installation directory.
+2. Create a FILES subdirectory or choose an existing export folder.
+3. Edit LL.INI beside LLSH32.EXE:
+     [HOST]
+     BIND=0.0.0.0
+     PORT=21210
+     ROOT=C:\LITELINK\FILES
+     LOG=C:\LITELINK\LLHOST.LOG
+4. Start LLSH32.EXE. A listening address and waiting status should appear.
+
+BIND=0.0.0.0 listens on all local IPv4 interfaces. You may instead use an IPv4
+address assigned to this Windows computer. The DOS peer must connect to a real
+assigned address, not to 0.0.0.0. If the computer has multiple adapters, use the
+address of the adapter on the DOS computer's LAN.
+
+On Windows 3.1, install Win32s and a compatible Winsock provider separately.
+Start that provider before LLShell32, then use Program Manager's Run command
+or a program item to launch the EXE. Keep program, root and log paths in 8.3
+form. The same Windows EXE is used on Windows 11; no DOS emulator is needed.
+
+DOS
+1. Copy DOS contents into the installation directory and create FILES.
+2. Select CONFIG\NE2000.INI, PICOMEM.INI or 3C509.INI. Copy it as LL.INI.
+3. Edit [NETWORK] to match the card's configured I/O address and DOS network
+   settings. Choose an unused static IP on the correct subnet. No DHCP client
+   is included in the DOS stack.
+4. Set [SHELL] HOST to the Windows listener's current LAN IPv4 address and
+   PORT to the same TCP port. ROOT=FILES exports the FILES subdirectory.
+5. Change into the installation directory and run LLSTART.BAT.
+
+Do not load a packet driver for these DOS apps. Close other software which
+owns the card. Windows 3.1's own Winsock provider may have a different driver
+setup; configure it according to that provider's instructions.
+
+FILES
+  DOS\LLSHELL.EXE     DOS file manager and command endpoint.
+  DOS\LLSTART.BAT     Batch supervisor; required for unloaded remote commands.
+  DOS\LLGET.EXE       HTTP download utility.
+  DOS\LLTIME.EXE      SNTP time/date utility.
+  DOS\LLNIC.EXE       Transient NIC/MAC initialization diagnostic.
+  DOS\NETDIAG.EXE     ARP, ping and TCP diagnostics.
+  DOS\LLDEBUG.BAT    Collects diagnostics in a new LLDBnn directory.
+  DOS\AUMON.COM       Optional transient memory diagnostic for JOBMEM=ON.
+  WINDOWS\LLSH32.EXE  Windows file manager/listener.
+  LL.INI              Each endpoint's local master configuration.
+  FILES\              Example shared folder.
+
+The source ZIP has SOURCE, CONFIG, MAKEFILE and BUILD.BAT instead of prebuilt
+program folders. Build first, then install the OUT programs and LLSTART.BAT
+as described in BUILD.TXT.
+
+UPGRADING
+Close the running managers before replacing EXEs. Preserve your working
+LL.INI, shared files and any pending job/queue records. Back them up first.
+Do not replace a working configuration with sample addresses.
+
+For the Windows-only 0.0.13 update, replace LLSH32.EXE. DOS LLShell 0.0.12 and
+utilities 0.0.11r1 do not need replacing if already installed. Recursive folder
+copying requires compatible managers on both ends (DOS 0.0.12 or later).

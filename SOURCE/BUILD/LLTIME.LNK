@@ -1,0 +1,10 @@
+format dos
+option quiet
+option stack=4096
+option start=start
+order clname CODE clname DATA clname BSS clname STACK
+option map=OUT\LLTIME.MAP
+name OUT\LLTIME.EXE
+file OUT\LLNET.OBJ,OUT\TIME.OBJ
+libpath '%WATCOM%\lib286\dos'
+library clibs.lib

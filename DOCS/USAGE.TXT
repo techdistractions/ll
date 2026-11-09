@@ -1,0 +1,89 @@
+USING LITELINK
+==============
+Local shows this computer's exported files; Peer shows the other computer's
+files. Each pane has independent directory navigation. Copy from the selected
+source pane into the folder displayed in the opposite pane.
+
+BROWSING / SELECTION
+DOS: Tab changes pane. Use arrows or PgUp/PgDn; Enter opens folders and
+Backspace moves up. Space/Insert toggles a tag; + prompts for a wildcard;
+* selects displayed entries and - clears tags. F5 copies tagged entries or
+the current item if nothing is tagged. F2 refreshes. F10 quits.
+
+Windows: double-click folders, Backspace to move up, Ctrl-click for multiple
+selection and Ctrl+A for all selectable entries. Space/Insert also toggles
+selection. F5 copies; F4 retries a saved queue. Folder names are sorted before
+files. . means current directory; .. means parent, stopping at the export root.
+
+FOLDERS / FILE OPERATIONS
+Selecting a real folder copies its contents recursively, including empty
+folders. Destination directories merge; existing files are not overwritten.
+A conflict counts as a skipped/failed file rather than replacing that file.
+Keep source folders stable while copying; a folder copy is not a disk snapshot.
+
+DOS F6 asks for a new name; F7 creates a folder. Windows uses its Name field
+with Rename/Folder buttons. Enter a single DOS 8.3 name, not a path. Delete
+requires confirmation and applies to files, not recursive folder deletion.
+
+CANCEL / RESUME
+Escape requests cancellation after the current file or operation. Completed
+files stay in place. Queue journals allow retry at file boundaries: use F4 on
+Windows or F5 on DOS for a restored paused queue. Resume requires the same
+peer and folders. It does not resume from a byte offset inside a partial file.
+If a connection drops after a destination was committed but before its final
+acknowledgement arrived, retry may report that it already exists. Verify the
+existing result before deciding whether to remove it for another attempt.
+
+REMOTE DOS COMMANDS
+1. Set ALLOWRUN=ON under [EXECUTION] in the DOS LL.INI.
+2. Start the DOS manager using LLSTART.BAT from its installation directory.
+3. Enter a DOS command in the Windows Command field and choose Run command.
+
+Example:
+  DIR > LISTING.TXT
+
+The DOS manager writes the job and exits completely. COMMAND.COM executes it
+from the selected DOS working folder. The batch supervisor records completion
+and starts the manager again. The Windows host waits for a matching resumed
+job before reporting completion. A temporary disconnect during execution is
+normal. After reconnection, refresh and copy generated result files back.
+
+F8 on DOS enters a command. The same ALLOWRUN and supervisor requirements apply.
+Commands are limited to 120 printable bytes. ALLOWRUN permits arbitrary DOS
+commands; file-export roots do not sandbox command execution.
+
+Windows programs can be launched through an installed WIN.COM, for example:
+  C:\WINDOWS\WIN.COM NOTEPAD.EXE
+Use the actual path on that DOS computer. Windows must exit normally and
+WIN.COM must return to DOS before the supervisor resumes. Closing the target
+application alone may leave Windows running. Unattended jobs must arrange
+normal Windows exit in the deployed program/command sequence and save their
+own success/failure results; a launch by itself is not completed-job evidence.
+
+LLGET - HTTP DOWNLOADS
+Stop the DOS manager before manual use of the same NIC.
+  LLGET http://example.com/archive.zip ARCHIVE.ZIP
+  LLGET http://example.com/archive.zip ARCHIVE.ZIP /CRC32=1234ABCD
+The URL and local output name are configurable command-line arguments. Use a
+new DOS 8.3 output name. Existing destinations are preserved. Downloads use a
+temporary file and disk readback before commit. The optional CRC must be the
+actual independently known expected value; the number above is only syntax.
+
+LLGet supports HTTP, bounded redirects and body framing. It does not implement
+TLS, native HTTPS or an included HTTPS relay. An HTTP conversion endpoint is
+still an HTTP request; do not assume it preserves arbitrary binary downloads.
+MAXKB in LL.INI limits download size.
+
+LLTIME - DATE AND TIME
+Configure [TIME] SERVER, PORT and UTCOFFSET in LL.INI, then stop the DOS manager.
+  LLTIME /CHECK     Check the proposed date/time without changing the clock.
+  LLTIME /SET       Set DOS date/time and verify readback.
+With no argument, LLTime checks only. The UTC offset is fixed minutes; adjust
+it yourself when local daylight-saving rules change. Network time is not an
+authenticated time source. Verify the displayed proposal before using /SET.
+
+DIAGNOSTICS
+LLNIC opens the selected hardware, reports its MAC/configuration and closes
+it again. A successful hardware probe does not prove network reachability.
+Use NETDIAG ARP, PING and TCP for the stages described in TROUBLE.TXT.
+LLDEBUG.BAT collects step-by-step logs in a new LLDBnn folder.

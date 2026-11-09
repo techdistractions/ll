@@ -1,0 +1,10 @@
+format dos
+option quiet
+option stack=4096
+option start=start
+order clname CODE clname DATA clname BSS clname STACK
+option map=OUT\NETDIAG.MAP
+name OUT\NETDIAG.EXE
+file OUT\DIAGNET.OBJ,OUT\NETDIAG.OBJ
+libpath '%WATCOM%\lib286\dos'
+library clibs.lib

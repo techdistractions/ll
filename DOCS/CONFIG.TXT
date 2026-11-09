@@ -1,0 +1,92 @@
+LL.INI CONFIGURATION
+===================
+Keep one LL.INI beside the programs on each computer. It is a local master
+file: DOS and Windows use settings relevant to their own endpoint. DOS tools
+prefer the master beside their EXE, with a current-directory fallback.
+
+Every shipped IP address is an example. Samples use:
+  Windows listener  192.168.0.10
+  DOS computer      192.168.0.20
+  Subnet mask       255.255.255.0
+  Gateway / DNS     192.168.0.1
+Replace these with values for your LAN, checking that the DOS address is free.
+NIC I/O addresses are hexadecimal. IPs and TCP/UDP ports are not hexadecimal.
+
+[NETWORK] - DOS HARDWARE / NETWORK
+  NIC=NE2000       NE2000, PICOMEM or 3C509; 3C509B is also an alias.
+  NICBASE=320      Actual hexadecimal I/O base: 320 means 320h.
+  IRQ=3            Card configuration information; LiteLink polls without ISR.
+  IP=192.168.0.20  Unused static DOS IPv4 address.
+  NETMASK=255.255.255.0
+  GATEWAY=192.168.0.1
+  DNS=192.168.0.1
+  TIMEOUT=60       Network timeout, 2..300 seconds.
+  RETRIES=2        Utility retry count, 0..5.
+  RETRYDELAY=3     Utility retry delay in seconds, 0..60.
+  BLOCKSIZE=256    Transfer block size: 128, 256 or 512 bytes.
+
+Use generous timeouts for slow DOS computers. 256-byte blocks are a sensible
+starting point; larger is not necessarily faster on every adapter.
+Windows also reads TIMEOUT and BLOCKSIZE, but uses its OS/provider for local
+IP configuration rather than the DOS NIC/IP settings.
+
+NE2000 / PICOMEM
+  MACFORMAT=AUTO   PROM decoding: AUTO, PACKED or DOUBLED.
+  MAC=...          Optional station-address override, not normally required.
+NE2000 defaults to AUTO; PICOMEM defaults to PACKED when MACFORMAT is omitted.
+Use an override only for the adapter's correct address, not another device's
+MAC. Match NICBASE to the card/emulator configuration; the sample value does
+not reconfigure the hardware. For a card set to 340h, use NICBASE=340.
+
+3C509B
+Use NIC=3C509 and the EEPROM-configured NICBASE. The station address is read
+from EEPROM: omit MAC and MACFORMAT. IDPORT=110 is the optional hexadecimal
+ISA activation port (100..1F0 in steps of 10h).
+
+Use a fixed transceiver selection (TP, AUI or BNC) configured with the card's
+own setup tool. Auto-select is refused. LiteLink does not write EEPROM or
+change connectors automatically. B-generation hardware is required for the
+8-bit ISA operation supported on an XT. Resolve I/O conflicts before running.
+
+DIAGNOSTIC OPTIONS
+PINGWAIT=3 sets an echo wait of 1..60 seconds; PINGCOUNT=4 selects 1..20 probes.
+These are NETDIAG utility settings, not manager connection parameters.
+
+[SHELL] - DOS MANAGER
+  MODE=MANAGER       Enables the two-pane DOS interface.
+  HOST=192.168.0.10   Windows listener's CURRENT LAN IPv4 address.
+  PORT=21210         Must match the Windows listening port.
+  ROOT=FILES         Export folder, relative to the DOS startup directory.
+  REQUEST=           Leave empty for normal manager use.
+MODE=AGENT is answering-only operation without the interactive manager.
+HOST is a destination address; never set it to 0.0.0.0.
+
+[EXECUTION] - DOS COMMAND PERMISSION
+  ALLOWRUN=OFF       ON permits arbitrary DOS commands through LLSTART.BAT.
+  JOBMEM=OFF         ON enables transient memory probes; needs AUMON.COM.
+Transfers and browsing do not require ALLOWRUN. Command execution is not
+restricted to ROOT; only enable it for trusted peers.
+
+[TIME] - LLTIME
+  SERVER=time.cloudflare.com   Example SNTP server; choose a reachable server.
+  PORT=123                    UDP destination port.
+  UTCOFFSET=0                 Signed local offset from UTC, in minutes.
+Examples: 0 is UTC, 60 is UTC+1, -300 is UTC-5. Choose the correct current local
+offset before LLTIME /SET. There is no automatic daylight-saving rule database.
+The samples use UTC rather than assuming a local time zone.
+
+[GET] - LLGET
+  MAXKB=16384        Maximum download size in KiB (16384 is 16 MiB).
+URL and destination are command-line arguments. Native TLS/HTTPS is not included.
+
+[HOST] - WINDOWS LISTENER
+  BIND=0.0.0.0
+  PORT=21210
+  ROOT=C:\LITELINK\FILES
+  LOG=C:\LITELINK\LLHOST.LOG
+BIND is all local interfaces or a specific assigned IPv4 address. ROOT must
+exist and be a directory. Use absolute ROOT/LOG paths appropriate to that
+computer. Keep paths short and 8.3-compatible on Windows 3.1.
+
+The Windows sample is also provided as CONFIG\WIN31.INI. It configures the
+Windows endpoint and is not a replacement for the DOS network configuration.
