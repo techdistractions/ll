@@ -37,3 +37,15 @@ hardware. Runtime support does not imply the build tools run on the same CPU.
 Use a trusted LAN. There is no peer authentication, encryption or native TLS.
 The shared-file root bounds file-manager access; enabled arbitrary DOS command
 execution is not a sandbox. Leave ALLOWRUN=OFF unless you need it.
+
+0.0.14 LLFS LIMITS AND QUALIFICATION
+LLFS is a separate resident mode, currently accepting actual DOS 3.30 only.
+Windows 11 and emulated DOS read/write were verified. Physical-NIC LLFS and
+the updated Win32s host are UNVERIFIED. The older 0.0.13 host was qualified
+on Win32s; do not extend that result to the new filesystem service.
+LLFS has one mounted client per host, 16 handles and 16 search slots, 8.3 paths
+up to 126 characters, files below 2 GiB and capped DOS free-space reporting.
+No automatic reconnect or write replay; a lost reply can leave an uncertain
+partially applied update. Unmount and inspect the file before retrying.
+Wildcard rename, ISO/MSCDEX, later-DOS layouts, raw disk sectors and simultaneous
+NIC sharing with other DOS tools/stacks are absent. See LLFS.TXT for details.

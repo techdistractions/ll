@@ -107,3 +107,11 @@ exit normally and WIN.COM must return to COMMAND.COM before the supervisor can
 record completion and restart LLShell. A deployed application/command sequence
 must arrange normal Windows exit for unattended operation. Launch acceptance
 alone is not command completion.
+
+## LLFS extension in 0.0.14
+
+LLFS uses the same AUAT version-1 envelope, CRC and per-direction sequence counters. Its HELLO identity is `LLFS    0.002` plus a zero flag byte. WELCOME contains little-endian capabilities: bit 0 read, bit 1 write. An older `LLFS    0.001` client is always read-only.
+
+Filesystem requests/replies use types 40/41. Requests start with an operation and volume 0; replies start with a DOS error word. Version-2 mount is `00 00 02 rwflag` followed by `FILES` and NUL. Write chunks are at most 480 bytes and are acknowledged only after a successful host flush. There is no application reconnect/replay after a failed frame. See `LLFS-DEV.TXT` and the adjacent validators in `WIN32/FS.C` for operation payloads.
+
+The existing manager wire identity and unloaded-job protocol remain compatible.

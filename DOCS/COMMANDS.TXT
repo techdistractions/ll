@@ -246,3 +246,25 @@ COMMON REMINDERS
 * DNS, HTTP and SNTP are plaintext and not authenticated/encrypted.
 * Use DOCS\USAGE.TXT for UI keys/copy/resume behavior and DOCS\CONFIG.TXT
   for every LL.INI setting.
+
+10. LLFS.EXE - DOS MAPPED DRIVE (ACTUAL DOS 3.30)
+------------------------------------------------
+  LLFS          Connect and mount FILESYSTEM DRIVE; return to the DOS prompt.
+  LLFS /U       Unmount, restore the interrupt/CDS and release NIC/memory.
+Keep LL.INI beside LLFS.EXE. HOST/PORT, NIC and drive are configured there.
+/U works even if LL.INI has since changed. Close applications and files,
+switch to a local drive, then unmount. Open files, a current remote drive
+or a later INT 2F hook owner cause safe refusal. The install/unmount log is
+LLFS.LOG in the current directory. Do not mount through LLSTART.BAT.
+
+11. LLRWTEST.EXE - OPTIONAL DOS READ/WRITE VERIFIER
+--------------------------------------------------
+  LLRWTEST E
+  LLRWTEST E C:\LITELINK\LLFS.EXE
+The first argument selects the already-mounted test drive. The optional
+second argument is the local LLFS executable used to check open-file unmount
+refusal; otherwise LLFS.EXE is searched in the current directory/PATH.
+Run from a local drive against a fresh dedicated export, with both write gates
+OFF. Refuses existing RWTREE/RWFINAL paths. Leaves RWFINAL\PERSIST.BIN for
+independent comparison. This test changes files and attributes in its own
+new folders. See TESTING.TXT for setup, expected output and cleanup.

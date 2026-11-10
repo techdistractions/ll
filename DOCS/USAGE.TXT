@@ -90,3 +90,11 @@ LLNIC opens the selected hardware, reports its MAC/configuration and closes
 it again. A successful hardware probe does not prove network reachability.
 Use NETDIAG ARP, PING and TCP for the stages described in TROUBLE.TXT.
 LLDEBUG.BAT collects step-by-step logs in a new LLDBnn folder.
+
+LLFS DRIVE MODE
+LLFS is an alternative to the DOS manager. After mounting, use DIR, CD, COPY,
+applications and normal DOS file APIs on the chosen letter. Use LLFS /U from
+a local drive after closing files. It is not started by LLSTART.BAT and is
+not compatible with another tool concurrently owning the same NIC. See LLFS.TXT.
+The host shows filesystem-service status for an LLFS connection; it does not
+interleave manager commands with filesystem operations.

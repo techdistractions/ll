@@ -5,7 +5,7 @@
  */
 
 /* Shared native/Win32s startup. Diagnostics precede argument/config parsing. */
-typedef struct {char root[260],log[260],bind[32],script[260];u16 port;int quiet,minimized,selftest,listenonly,defaultroot;} HostOptions;
+typedef struct {char root[260],log[260],bind[32],script[260];u16 port;int quiet,minimized,selftest,listenonly,defaultroot,fs_readonly;} HostOptions;
 static HostOptions options;
 static HANDLE bootlog=INVALID_HANDLE_VALUE;
 static char exedir[260],bootpath[260],inipath[260],listen_address[32],listen_text[96];
@@ -33,7 +33,7 @@ static HANDLE appendlog(const char*name){HANDLE h;
  h=CreateFileA(name,FILE_APPEND_DATA,FILE_SHARE_READ|FILE_SHARE_WRITE,0,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,0);
 #endif
  return h;}
-static void bootstrap(void){DWORD n,error;unsigned i;zero(&options,sizeof(options));n=GetModuleFileNameA(0,exedir,sizeof(exedir));if(!n||n>=sizeof(exedir)){error=GetLastError();startup_fail("GetModuleFileNameA","WIN32",error?error:122,"Cannot locate executable directory");}i=slen(exedir);while(i&&exedir[i-1]!='\\')i--;if(!i)startup_fail("GetModuleFileNameA","CONFIG",87,"Executable path has no directory");exedir[i-1]=0;
+static void bootstrap(void){DWORD n,error;unsigned i;zero(&options,sizeof(options));options.fs_readonly=1;n=GetModuleFileNameA(0,exedir,sizeof(exedir));if(!n||n>=sizeof(exedir)){error=GetLastError();startup_fail("GetModuleFileNameA","WIN32",error?error:122,"Cannot locate executable directory");}i=slen(exedir);while(i&&exedir[i-1]!='\\')i--;if(!i)startup_fail("GetModuleFileNameA","CONFIG",87,"Executable path has no directory");exedir[i-1]=0;
  if(slen(exedir)>215)startup_fail("bootstrap.path","CONFIG",122,"Executable directory is too long");textcopy(bootpath,exedir);
 #ifdef LEGACY_WIN32S
  textcopy(bootpath+slen(bootpath),"\\LLSTART.LOG");
@@ -68,6 +68,7 @@ static void configure(void){unsigned i;char p[24];const char*v;DWORD attrs,error
  inivalue("ROOT",options.root,options.root,sizeof(options.root));inivalue("LOG",options.log,options.log,sizeof(options.log));inivalue("BIND","0.0.0.0",options.bind,sizeof(options.bind));inivalue("PORT","21210",p,sizeof(p));options.port=parseport(p);options.defaultroot=0;
  GetPrivateProfileStringA("NETWORK","TIMEOUT","60",p,sizeof(p),inipath);i=parseport(p);if(i<2||i>300)startup_fail("LL.INI.TIMEOUT","CONFIG",87,"TIMEOUT must be 2..300 seconds");timeoutms=(u32)i*1000UL;
  GetPrivateProfileStringA("NETWORK","BLOCKSIZE","256",p,sizeof(p),inipath);transferblock=parseport(p);if(transferblock!=128&&transferblock!=256&&transferblock!=512)startup_fail("LL.INI.BLOCKSIZE","CONFIG",87,"BLOCKSIZE must be 128, 256 or 512");
+ GetPrivateProfileStringA("HOST","READONLY","ON",p,sizeof(p),inipath);if(same(p,"OFF"))options.fs_readonly=0;else if(!same(p,"ON"))startup_fail("LL.INI.READONLY","CONFIG",87,"HOST READONLY must be ON or OFF");
  stage_record("OK","LL.INI","CONFIG",0,inipath);
 #endif
  if(startargc>1&&startargv[1][0]!='-'){
@@ -92,6 +93,7 @@ static void configure(void){unsigned i;char p[24];const char*v;DWORD attrs,error
  logfile=appendlog(options.log);if(logfile==INVALID_HANDLE_VALUE){error=GetLastError();startup_fail("CreateFileA(log)","WIN32",error,options.log);}
  textcopy(basedir,options.root);stage_record("OK","configuration","CONFIG",0,options.root);stage_record("OK","logfile","WIN32",0,options.log);
 #ifdef LITELINK
+ GetPrivateProfileStringA("HOST","READONLY","ON",p,sizeof(p),inipath);if(same(p,"OFF"))options.fs_readonly=0;else if(!same(p,"ON"))startup_fail("LL.INI.READONLY","CONFIG",87,"HOST READONLY must be ON or OFF");
  stage_record("OK","LL.INI","CONFIG",0,inipath);
 #endif
 }

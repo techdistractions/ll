@@ -1,0 +1,51 @@
+TESTING LITE LINK 0.0.14 ON YOUR HARDWARE
+=========================================
+No DOSBox/SLiRP addresses or development paths are required. Use your own DOS
+machine, supported NIC and native Windows TCP host. Physical-card LLFS and
+Windows 3.1/Win32s for this version are UNVERIFIED; useful results include both
+successes and failures with the exact OS, card/base/media, config and logs.
+
+1. Choose the CONFIG example matching your NIC. Save it as DOS LL.INI and edit
+   all addresses and hardware values. HOST is the Windows machine's real IP.
+   Stop any other NIC owner. Run LLNIC, NETDIAG ARP host, then NETDIAG TCP host
+   port. Their reported results describe your actual hardware, not a simulation.
+2. Start Windows LLSH32.EXE with a separate Windows LL.INI. ROOT must point at
+   a NEW dedicated test directory. Use your real bind IP/port. Do not use a
+   directory with valuable files for write tests. The program does not change
+   Windows Firewall. For a connection failure, retain HOST.LOG/LLSTART.LOG.
+3. On actual DOS 3.30, choose a free letter (e.g. E) in FILESYSTEM DRIVE.
+   CONFIG.SYS LASTDRIVE must cover it. Set FILESYSTEM READONLY=ON and HOST
+   READONLY=ON initially. Run LLFS; check DIR E: and read/copy a host test file.
+   A write should fail. Close files, select the local drive, LLFS /U.
+4. Change BOTH write gates to READONLY=OFF. Restart the Windows host and run
+   LLFS again. Copy TESTS\LLRWTEST.EXE from the binary package to your local
+   DOS tools directory (or build it with BUILD tests on a suitable build PC).
+   Run from a LOCAL drive, with LLFS.EXE in the directory/PATH, for example:
+     LLRWTEST E > RWTEST.TXT
+   Or specify the local loader explicitly:
+     LLRWTEST E C:\LITELINK\LLFS.EXE > RWTEST.TXT
+   Replace E and the path with your choices. The test refuses existing RWTREE
+   or RWFINAL directories. It creates its own folders/files, checks read/write,
+   seek, append, truncate, duplicate handles, commit, sharing/locks, attributes,
+   timestamps and exact rename. It also verifies open files block unmount.
+   Success ends with: READ/WRITE DOS API checks: PASS (0 errors).
+5. On DOS use DEL E:\RWFINAL\*.TMP to test wildcard deletion. COPY the remaining
+   PERSIST.BIN to your local disk and compare it independently. Expected size:
+   4099 bytes. SHA256:
+   5f080242526981d5b61117c08f2fc5783ac1d7d6fc30ab7bde2f0e0016767d2a
+   The two TMP files remain unless you run that DEL. Keep RWTEST.TXT, LLFS.LOG,
+   the host logs, and your two INI files with any bug report. Remove secrets
+   from logs/config before posting publicly.
+6. Switch to a local drive and LLFS /U. It should report memory/NIC release.
+   A repeated run needs a fresh test export or deliberate removal of only the
+   previous test's RWTREE/RWFINAL folders. The verifier never deletes them.
+
+For the ordinary managers, unmount LLFS first, run LLSTART.BAT, copy a small
+binary in both directions and compare bytes/checksums. To test unloaded RPC,
+explicitly enable ALLOWRUN and run a simple DIR > LISTING.TXT job, then retrieve
+its output after reconnection. LLGet needs an HTTP URL; LLTime /CHECK does not
+set the clock. Addresses and paths in documentation are examples, not defaults
+for your LAN. Compilers, DOS/Windows OS files and Winsock are installed separately.
+
+Compilation is not runtime verification. Record exactly which program/OS/NIC
+combination ran, and whether the test completed or failed at a specific stage.

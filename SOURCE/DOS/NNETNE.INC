@@ -3,42 +3,55 @@
 ; Runtime-selected NIC and IPv4; no implicit physical LAN configuration.
 include NNETDEF.INC
 ; No application-visible packet API, allocation, IRQ, TSR or external stack.
-IP_SEQ EQU 3840
-IP_ACK EQU 3844
-IP_TXSEQ EQU 3848
-IP_TXLEN EQU 3852
-IP_FLAGS EQU 3854
-IP_STATE EQU 3856
-IP_RXLEN EQU 3858
-IP_RXPOS EQU 3860
-IP_PEER EQU 3862
-IP_MAC EQU 3866
-IP_ID EQU 3872
-IP_PORT EQU 3874
-IP_WINDOW EQU 3876
-IP_RETRY EQU 3878
-IP_TIME EQU 3880
-IP_WAIT EQU 3882
-IP_ERROR EQU 3884
-IP_BUSY EQU 3886
-IP_DNS EQU 3904
-IP_END EQU 3890
-IP_TCP EQU 3892
-IP_NLEN EQU 3894
-IP_SAVED EQU 3896
-IP_RTO EQU 3898
-IP_RX EQU 4096
-IP_TX EQU 4608
+IP_SEQ EQU 3840-NNET_DELTA
+IP_ACK EQU 3844-NNET_DELTA
+IP_TXSEQ EQU 3848-NNET_DELTA
+IP_TXLEN EQU 3852-NNET_DELTA
+IP_FLAGS EQU 3854-NNET_DELTA
+IP_STATE EQU 3856-NNET_DELTA
+IP_RXLEN EQU 3858-NNET_DELTA
+IP_RXPOS EQU 3860-NNET_DELTA
+IP_PEER EQU 3862-NNET_DELTA
+IP_MAC EQU 3866-NNET_DELTA
+IP_ID EQU 3872-NNET_DELTA
+IP_PORT EQU 3874-NNET_DELTA
+IP_WINDOW EQU 3876-NNET_DELTA
+IP_RETRY EQU 3878-NNET_DELTA
+IP_TIME EQU 3880-NNET_DELTA
+IP_WAIT EQU 3882-NNET_DELTA
+IP_ERROR EQU 3884-NNET_DELTA
+IP_BUSY EQU 3886-NNET_DELTA
+IP_DNS EQU 3904-NNET_DELTA
+IP_END EQU 3890-NNET_DELTA
+IP_TCP EQU 3892-NNET_DELTA
+IP_NLEN EQU 3894-NNET_DELTA
+IP_SAVED EQU 3896-NNET_DELTA
+IP_RTO EQU 3898-NNET_DELTA
+IP_RX EQU 4096-NNET_DELTA
+IP_TX EQU 4608-NNET_DELTA
 ; RX frame processing and TX serialization never overlap. Reuse the NIC's
 ; consumed frame buffer rather than crossing the compiler's global DATA area.
-IP_FRAME EQU 2288
+IP_FRAME EQU 2288-NNET_DELTA
 ; DNS completes before TCP owns the transmit buffer.
-IP_QUERY EQU 4608
+IP_QUERY EQU 4608-NNET_DELTA
+IFNDEF LLFS_COMPACT
 net_ne_start:
     cmp di,37
+IFDEF LLFS_COMPACT
+    jne fs_skip_ip_resolve_entry
+    jmp ip_resolve_entry
+fs_skip_ip_resolve_entry:
+ELSE
     je ip_resolve_entry
+ENDIF
     cmp di,36
+IFDEF LLFS_COMPACT
+    jne fs_skip_ip_dial
+    jmp ip_dial
+fs_skip_ip_dial:
+ELSE
     je ip_dial
+ENDIF
     cmp di,40
     je ip_cleanup
     cmp di,46
@@ -64,6 +77,7 @@ ip_checksum_entry:
     xor dx,dx
     ret
 ; Relocated by NOWNNET against the common runtime's nr_error.
+ENDIF
 nr_error:
     mov [bx+IP_ERROR],ax
     ret
@@ -95,10 +109,14 @@ include NNETRS.INC
 
 ip_raw:
     push bx
-    add bx,1920
+    add bx,NNET_BASE
     call raw_nic_start
     pop bx
     ret
+IFDEF LLFS_COMPACT
+_TEXT ends
+FSINIT segment word public 'INITCODE'
+ENDIF
 ip_open:
 IFDEF LL_DIAGNOSTIC
     mov word ptr _diag_stage,1
@@ -107,7 +125,7 @@ ENDIF
     push cx
     push si
     push di
-    cmp word ptr [bx+1928],1
+    cmp word ptr [bx+NNET_BASE+8],1
     je ip_open_ok
     mov di,32
     call ip_raw
@@ -128,6 +146,10 @@ ip_open_bad:
     pop ax
     stc
     ret
+IFDEF LLFS_COMPACT
+FSINIT ends
+_TEXT segment word public 'CODE'
+ENDIF
 ip_ticks:
     push es
     mov ax,40h
@@ -705,6 +727,10 @@ ip_pump_out:
     pop ax
     ret
 ; Literal parser, or bounded DNS A query to the configured native DNS server.
+IFDEF LLFS_COMPACT
+_TEXT ends
+FSINIT segment word public 'INITCODE'
+ENDIF
 ip_resolve_host:
     mov word ptr [bx+IP_PEER],0
     mov word ptr [bx+IP_PEER+2],0
@@ -884,61 +910,157 @@ ip_dns_read:
     mov ax,di
     add ax,20
     cmp ax,bp
+IFDEF LLFS_COMPACT
+    jbe fs_long_1
+    jmp ip_pump_timer
+fs_long_1:
+ELSE
     ja ip_pump_timer
+ENDIF
     cmp word ptr [di],3500h
+IFDEF LLFS_COMPACT
+    je fs_long_2
+    jmp ip_pump_timer
+fs_long_2:
+ELSE
     jne ip_pump_timer
+ENDIF
     cmp word ptr [di+2],00C0h
+IFDEF LLFS_COMPACT
+    je fs_long_3
+    jmp ip_pump_timer
+fs_long_3:
+ELSE
     jne ip_pump_timer
+ENDIF
     mov ax,[di+4]
     xchg al,ah
     cmp ax,20
+IFDEF LLFS_COMPACT
+    jae fs_long_4
+    jmp ip_pump_timer
+fs_long_4:
+ELSE
     jb ip_pump_timer
+ENDIF
     add ax,di
     cmp ax,bp
+IFDEF LLFS_COMPACT
+    jbe fs_long_5
+    jmp ip_pump_timer
+fs_long_5:
+ELSE
     ja ip_pump_timer
+ENDIF
     mov bp,ax
     add di,8
     mov ax,[bx+IP_QUERY]
     cmp ax,[di]
+IFDEF LLFS_COMPACT
+    je fs_long_6
+    jmp ip_pump_timer
+fs_long_6:
+ELSE
     jne ip_pump_timer
+ENDIF
     test byte ptr [di+2],80h
+IFDEF LLFS_COMPACT
+    jnz fs_long_7
+    jmp ip_pump_timer
+fs_long_7:
+ELSE
     jz ip_pump_timer
+ENDIF
     test byte ptr [di+2],2
+IFDEF LLFS_COMPACT
+    jz fs_dns_not_truncated
+    jmp ip_pump_timer
+fs_dns_not_truncated:
+ELSE
     jnz ip_pump_timer ; truncated response, no out-of-bounds fallback
+ENDIF
     test byte ptr [di+3],0Fh
     jnz ip_dns_failure
     cmp word ptr [di+4],0100h
+IFDEF LLFS_COMPACT
+    je fs_long_8
+    jmp ip_pump_timer
+fs_long_8:
+ELSE
     jne ip_pump_timer
+ENDIF
     mov dx,[di+6]
     xchg dl,dh
     cmp dx,32
+IFDEF LLFS_COMPACT
+    jbe fs_long_9
+    jmp ip_pump_timer
+fs_long_9:
+ELSE
     ja ip_pump_timer
+ENDIF
     add di,12
     call ip_dns_skip
+IFDEF LLFS_COMPACT
+    jnc fs_long_10
+    jmp ip_pump_timer
+fs_long_10:
+ELSE
     jc ip_pump_timer
+ENDIF
     add di,4
 ip_dns_answer:
     or dx,dx
     jz ip_dns_failure
     dec dx
     call ip_dns_skip
+IFDEF LLFS_COMPACT
+    jnc fs_long_11
+    jmp ip_pump_timer
+fs_long_11:
+ELSE
     jc ip_pump_timer
+ENDIF
     mov ax,di
     add ax,10
     cmp ax,bp
+IFDEF LLFS_COMPACT
+    jbe fs_long_12
+    jmp ip_pump_timer
+fs_long_12:
+ELSE
     ja ip_pump_timer
+ENDIF
     mov cx,[di+8]
     xchg cl,ch
     add ax,cx
+IFDEF LLFS_COMPACT
+    jnc fs_long_13
+    jmp ip_pump_timer
+fs_long_13:
+ELSE
     jc ip_pump_timer
+ENDIF
     cmp ax,bp
+IFDEF LLFS_COMPACT
+    jbe fs_long_14
+    jmp ip_pump_timer
+fs_long_14:
+ELSE
     ja ip_pump_timer
+ENDIF
     cmp word ptr [di],0100h
     jne ip_dns_next
     cmp word ptr [di+2],0100h
     jne ip_dns_next
     cmp cx,4
+IFDEF LLFS_COMPACT
+    je fs_long_15
+    jmp ip_pump_timer
+fs_long_15:
+ELSE
     jne ip_pump_timer
+ENDIF
     mov ax,[di+10]
     mov [bx+IP_PEER],ax
     mov ax,[di+12]
@@ -1124,7 +1246,13 @@ ip_decimal_digit:
     ret
 ip_connect_entry:
     call ip_connect
+IFDEF LLFS_COMPACT
+    jnc fs_long_16
+    jmp rs_empty
+fs_long_16:
+ELSE
     jc rs_empty
+ENDIF
     jmp rs_done
 ip_http_connect:
     cmp word ptr [bx+4],0
@@ -1213,6 +1341,10 @@ ip_resolved:
     clc
 ip_connect_return:
     ret
+IFDEF LLFS_COMPACT
+FSINIT ends
+_TEXT segment word public 'CODE'
+ENDIF
 ip_reliable:
     mov word ptr [bx+IP_WAIT],1
     mov word ptr [bx+IP_RETRY],0
@@ -1302,6 +1434,7 @@ ip_write_closed:
     call nr_error
     stc
     ret
+IFNDEF LLFS_COMPACT
 ip_read:
     call ip_pump
     cmp word ptr [bx+IP_ERROR],0
@@ -1363,6 +1496,7 @@ ip_connected_value:
 ip_status:
     call ip_pump
     ret
+ENDIF
 ip_disconnect_entry:
     cmp word ptr [bx+IP_STATE],2
     je ip_disconnect_active
@@ -1408,17 +1542,18 @@ ip_disconnect_close:
     mov word ptr [bx+10],0
     mov word ptr [bx+14],0
     jmp rs_done
-; Raw NIC state is private at NETWORK+1920.
+; Raw NIC state starts at NETWORK+NNET_BASE (compact LLFS or original layout).
 include NNETNIC.INC
 include NNET3C.INC
 ; Never probe another backend when the explicitly selected hardware fails.
 raw_nic_start:
-    cmp word ptr [bx+CFG_NICTYPE-1920],2
+    cmp word ptr [bx+CFG_NICTYPE-NNET_BASE],2
     je raw_3c_start
-    cmp word ptr [bx+CFG_NICTYPE-1920],1
+    cmp word ptr [bx+CFG_NICTYPE-NNET_BASE],1
     jbe raw_ne_start
     mov ax,445
     ret
+IFNDEF LLFS_COMPACT
 ne_description:
     mov word ptr [di],454Eh
     mov word ptr [di+2],3032h
@@ -1428,4 +1563,5 @@ ne_description:
     mov word ptr [di+10],726Fh
     mov byte ptr [di+12],0
     ret
+ENDIF
 net_ne_end:

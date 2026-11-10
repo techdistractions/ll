@@ -1,4 +1,4 @@
-LITELINK 0.0.13
+LITELINK 0.0.14
 ==============
 Lite Link (LL) is an experimental micro-networking SUITE for DOS, designed for
 8088-class computers with 256 KB RAM or more. Instead of a conventional
@@ -9,18 +9,19 @@ LLShell is ONE application in the suite, not Lite Link itself. The bundled
 utilities share the lightweight networking foundation; more may be added.
 
 CHOOSE A PACKAGE
-  LITELINK-0.0.13-BINARY.ZIP  Programs, configuration examples and user guides.
-  LITELINK-0.0.13-SOURCE.ZIP  Source, examples, documentation and Watcom build.
+  LITELINK-0.0.14-BINARY.ZIP  Programs, configuration examples and user guides.
+  LITELINK-0.0.14-SOURCE.ZIP  Source, examples, documentation and Watcom build.
 
 DOS: DOS 3.3+, 8086-compatible processor and supported Ethernet hardware.
 Supported native backends: NE2000, PicoMEM NE2000 emulation and 3C509B.
 The DOS apps poll the card directly; do not load a packet driver for them.
 
-Windows: the same LLSH32.EXE runs on Windows 11 x64 and on Windows 3.1 with
-Win32s 1.1 and a Winsock provider such as Trumpet. On Windows 3.1 start the
-provider first. Windows, Win32s, Winsock and compilers are not bundled.
+Windows target: Windows 11 x64 or Windows 3.1 with Win32s/Winsock. The new
+0.0.14 host is verified on Windows 11; its Win32s runtime is UNVERIFIED.
+The 0.0.13 host was tested on both. Start the Winsock provider first on 3.1.
+Windows, Win32s, Winsock and compilers are not bundled.
 
-The package contains LLShell32 0.0.13, DOS LLShell 0.0.12 and utilities
+The package contains LLShell32 0.0.14, DOS LLShell 0.0.12 and utilities
 0.0.11r1. Different component version banners are expected.
 
 QUICK START
@@ -92,7 +93,9 @@ Windows must exit normally and return to DOS before LiteLink can resume. For
 unattended jobs, the deployed application or command sequence must arrange that
 exit and save its own results. LiteLink does not remain running to close Windows.
 
-COMPLETE SUITE (0.0.13 PACKAGE)
+COMPLETE SUITE (0.0.14 PACKAGE)
+  LLFS.EXE       Optional resident mapped drive; actual DOS 3.30 only.
+  LLRWTEST.EXE   Optional LLFS verifier; see DOCS\TESTING.TXT.
   LLSHELL.EXE    DOS dual-pane file manager and remote command endpoint.
   LLSH32.EXE     Windows file manager and TCP listener.
   LLGET.EXE      HTTP downloader; optional expected CRC32, no native HTTPS.
@@ -119,8 +122,9 @@ are examples only. LLTIME is check-only by default; /SET changes DOS time.
 
 UPGRADING
 Close the managers before copying new EXEs. Keep your working LL.INI and shared
-files. For this release, the Windows icon and path-label redraw are updated;
-no DOS binary update is required if those components are already current.
+files. This version adds LLFS 0.0.2 and its Windows host service. Install the matching
+0.0.14 Windows host to use LLFS. Existing managers/utilities remain included.
+The new optional FILESYSTEM/ISO configuration sections are accepted by the suite.
 
 BUILD FROM SOURCE
 Use a complete Open Watcom installation with DOS and Win32 tools/libraries.
@@ -164,3 +168,16 @@ DOCUMENTATION
 Use a trusted LAN. Transfers and commands are not authenticated or encrypted.
 ALLOWRUN permits arbitrary DOS commands; the shared-file root is not a command
 sandbox. Keep ALLOWRUN=OFF unless command execution is needed.
+
+LLFS MAPPED DRIVE - NEW IN 0.0.14
+Run LLFS separately from LLSTART. The mapped drive keeps a resident network
+stack while mounted (13,184 bytes plus a 16-byte DOS header). This optional
+mode is different from unloaded LLShell remote commands. Choose C through Z
+in [FILESYSTEM] DRIVE, with LASTDRIVE covering it. C is suitable for a PC
+booted from floppy with no local hard disk. Actual DOS 3.30 is required.
+For writes, set both DOS [FILESYSTEM] READONLY=OFF and Windows [HOST]
+READONLY=OFF. Both default to ON. Host ROOT chooses the exported folder.
+LLFS /U releases the NIC and memory after files close and you select a local
+drive. See DOCS\LLFS.TXT for recovery/limits and DOCS\TESTING.TXT to test.
+Physical-NIC LLFS and this version's Win32s host runtime are UNVERIFIED.
+The latest implemented version is 0.0.14; individual component banners differ.

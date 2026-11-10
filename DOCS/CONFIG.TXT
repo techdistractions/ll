@@ -217,3 +217,26 @@ The 0.0.13 stack has no authentication, encryption, native HTTPS or DHCP
 client on DOS. Keep it on a trusted network, back up your LL.INI and do not
 expose its file-transfer/command ports to untrusted networks. Only one DOS
 Lite Link program or other driver may own the NIC at a time.
+
+LLFS MAPPED DRIVE (0.0.14)
+--------------------------
+[FILESYSTEM] is an optional DOS master-INI section used by LLFS.EXE only:
+  DRIVE=E        Free drive C..Z, optionally with a colon. No default letter.
+                 CONFIG.SYS LASTDRIVE must cover it. C suits floppy-only PCs.
+  SHARE=FILES    Required logical service name. It maps to Windows HOST ROOT;
+                 it is not a fixed Windows path or the DOS SHELL ROOT folder.
+  READONLY=ON    ON (default) forbids writes. OFF requests read/write service.
+  TIMEOUT=30     2..60 seconds. Overrides NETWORK TIMEOUT if placed afterward.
+[ISO]
+  ENABLED=OFF    Must remain OFF. ISO/MSCDEX are not implemented.
+The existing DOS NIC/base/IP/mask/gateway/DNS and SHELL HOST/PORT are reused.
+LLFS accepts an IPv4 or DNS hostname for SHELL HOST; LLShell still requires
+an IPv4 literal. LLFS needs actual DOS 3.30; other suite tools retain DOS 3.3+.
+
+On Windows, HOST READONLY=ON (default) refuses writable LLFS mounts. Set OFF
+and restart the host to allow them. BOTH endpoints must permit writes.
+HOST READONLY controls LLFS only; it does not disable manager transfers/RPC.
+ROOT selects an existing export folder. No emulator address, host path or
+fixed drive is built into the application. Config examples use documentation
+addresses; edit them for real hardware. Preserve your own LL.INI on upgrade.
+See LLFS.TXT for all supported operations and recovery details.

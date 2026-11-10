@@ -72,3 +72,15 @@ AUJOB.DAT, AUJOB.BAT and AUDONE.TXT outside that folder, then remove the origina
 copies and restart LLSTART.BAT. Also preserve related host/agent logs. This
 clears recovery state; it does not undo whatever the command already did.
 Do not perform this reset while the manager or a command is running.
+
+LLFS (0.0.14)
+Invalid LL.INI: check FILESYSTEM DRIVE/SHARE/READONLY and the NETWORK/SHELL
+settings. Do not copy a Windows-only INI to DOS. Exceeds LASTDRIVE: update
+CONFIG.SYS and reboot. Occupied letter: choose a free C..Z drive in LL.INI.
+Host is read-only: enable HOST READONLY=OFF and restart before a writable mount.
+On network failure, close applications/files, select a local drive and LLFS /U.
+An uncertain-write warning means the last operation may have reached the host;
+inspect it rather than blindly repeating it. LLFS performs no request replay.
+Open files or a later interrupt hook owner intentionally prevent unsafe unload.
+The GUI displays LLFS service status while mapped; normal file-manager actions
+are unavailable until the drive unmounts. Change modes after disconnecting.

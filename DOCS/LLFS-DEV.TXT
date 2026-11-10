@@ -1,0 +1,93 @@
+LLFS 0.0.2 - DEVELOPER NOTES
+===========================
+SOURCE MAP
+  DOS\LLFS.C      Installer and DOS 3.3 INT 2F filesystem dispatch.
+  DOS\DOS3.H      DOS 3.x SDA/CDS/SFT/search structures; MIT attribution retained.
+  DOS\FSHOOK.ASM  Chainable redirector hook, register capture, private stack,
+                  install/probe/unmount controls. No resident DOS calls.
+  DOS\FSSTART.ASM 8086 startup and bounded native TCP adapters.
+  DOS\FSRUNTIME.H Streaming LL.INI parser and transient DOS helpers.
+  DOS\FSEND.ASM   Independent BSS-end and retained-allocation markers.
+  DOS\NNET*.INC   Shared native NE2000/PicoMEM/3Com polling TCP/IP implementation.
+  WIN32\FS.C      Filesystem endpoint, host handles, mode/lock/error mapping.
+  WIN32\HOST.C    Shared host entry and connection dispatch.
+  WIN32\GUI.INC   GUI/timer service, isolated from normal manager operations.
+  WIN32\STARTUP.INC Configuration and exact Windows/Winsock startup logging.
+  SHARED\AU.H    Framing, sequence, length bounds and CRC32.
+  BUILD\LLFS.LNK Explicit retained/transient link ordering.
+
+MEMORY LAYOUT
+  Retained: CODE, BSS, initialized scalars, CONST2 CRC table, FSLIMIT marker.
+  Transient suffix: CONST startup literals, FSINIT setup code, startup stack.
+  The installer zeros only BSS, never initialized scalars/table or the setup
+  instructions. AH=31h keeps the paragraph-rounded boundary including PSP.
+  Unmount restores the saved CDS and interrupt vector and frees the block.
+  No heap is retained; the environment and standard handles are released.
+  FSLIMIT must contain a real byte: a zero-length label can be reordered away.
+  Do not put a resident literal into transient CONST. LLFS frameout uses
+  immediate AUAT signature values; its CRC table stays in retained CONST2.
+  LLFS uses a 512-byte private stack with 8086 interrupts enabled for the BIOS
+  clock and normal hardware handlers. The hook rejects recursive entry.
+  DNS, routing, connection setup, PROM/EEPROM reads, MAC parsing and hardware
+  activation execute only before residency. A retained setup flag prevents
+  late UDP packets from branching into discarded DNS code. Retained NIC
+  close/TX/RX code and hardware register helpers remain in CODE.
+  Runtime selection still includes both NIC backends; no separate card EXE.
+
+  NNET_BASE=384 and NNET_DELTA=1536 only for LLFS. All hardware-selector offsets
+  must use CFG_NICTYPE-NNET_BASE, not a literal -1920. Other programs retain
+  their original network-state layout. TCP RX/TX are 512 bytes each and the
+  Ethernet scratch/frame capacity is unchanged.
+  LLFS request/reply payloads share one 512-byte buffer sequentially. Requests
+  are at most 490 bytes; frameout copies backwards to prepend the 16-byte
+  header in-place, avoiding another buffer and a separate tiny TCP segment.
+  Compile LLFS with its own SOURCE\SHARED include directory. Relative includes
+  through ../SHARED could accidentally select an older parent checkout under
+  Watcom's include search order; the packaged build uses an explicit path.
+
+WIRE EXTENSION
+  Existing AUAT version-1 envelope: 16-byte header, little-endian length and
+  per-direction sequence, IEEE CRC32 of payload. No application request replay.
+  HELLO identity LLFS    0.002 plus a zero byte. WELCOME u16 capabilities:
+  bit 0=read; bit 1=write. Legacy LLFS    0.001 receives read-only capability.
+  Type 40 requests, type 41 replies; requests begin with operation and volume0.
+  V2 mount: 00 00 02 rwflag followed by FILES and NUL (10 bytes total).
+  Replies begin with a DOS u16 error. Zero means success.
+  Offsets/file lengths are u32; the maximum accepted file size is 0x7fffffff.
+  Write data chunks are at most 480 bytes. Replies carry count and DOS time.
+  Requests map the DOS redirector operations for directory, attributes, rename,
+  delete, open/create, read/write, commit/close, locks, space and find services.
+  Exact payload checks are adjacent to each operation in WIN32\FS.C.
+  QUIT closes the session. Framing/CRC/sequence errors disconnect it.
+
+FILE SEMANTICS
+  Host handles retain DOS access/share mode. FILE_SHARE_DELETE is not granted.
+  Every write/truncate success crosses a successful FlushFileBuffers boundary.
+  Short writes return the real byte count. Partial multi-request writes remain
+  possible; the client never claims file-wide rollback or atomicity.
+  A broken mutation reply marks its result uncertain. Later operations do not
+  reconnect. Close still relinquishes local SFT ownership so /U is possible.
+  Explicit DOS file timestamps are carried at commit/last-close using the
+  DOS SFT no-date flag. Ordinary writes set host last-write time.
+  DOS 3.3 INT 2F 110A/110B lock ABI: CX:DX offset, SI high length and original
+  caller stack word low length; ES:DI points to the SFT. It is not the later
+  DOS 4 record-list ABI. Host LockFile/UnlockFile enforce actual byte ranges.
+  Reserved DOS names, traversal, absolute volume names and reparse components
+  are rejected. These checks are not an OS sandbox against concurrent local
+  filesystem manipulation; use a controlled export on a trusted host.
+  The export is anchored at options.root, independent of GUI navigation.
+
+TEST EVIDENCE
+  The validation report records actual DOS API results, host logs,
+  memory before/after, returned binary hashes and a deliberately lost successful
+  write acknowledgment. The write reached host storage exactly once and DOS
+  reported failure without reconnect/replay. Protocol guards test CRC, duplicate
+  sequence, traversal and both read-only gates. Original LiteLink transfer,
+  LLGet HTTP, LLTime UDP and unloaded RPC regression checks passed.
+  The Win16 WRSAVE probe creates/reopens C:\WINWRITE.TXT, changes WIN.INI via
+  WriteProfileString and emits C:\WINPASS.TXT after success. It contains no
+  Windows shutdown helper. A private copy of Windows 2 is used for all writes.
+  The installed Watcom _commit C wrapper has an inverted success return;
+  the API probe tests the real DOS AH=68 service using _dos_commit instead.
+  Public archives exclude licensed OS disks, emulator ROMs and machine-local
+  test automation. The portable WMAKE build uses only the Watcom toolchain.

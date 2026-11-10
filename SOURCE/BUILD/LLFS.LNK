@@ -1,0 +1,10 @@
+format dos
+option quiet
+option stack=1024
+option start=start
+order clname CODE clname BSS clname DATA segment _DATA segment CONST2 segment FSLIMIT segment CONST clname INITCODE clname STACK
+option map=OUT\LLFS.MAP
+name OUT\LLFS.EXE
+file OUT\FSSTART.OBJ,OUT\FSHOOK.OBJ,OUT\LLFS.OBJ,OUT\FSEND.OBJ
+libpath '%WATCOM%\lib286\dos'
+library clibs.lib

@@ -13,3 +13,7 @@ AUDONE.TXT
 /TOOLS/GITHUB/LEGACY/
 /TOOLS/GITHUB/LEGACY/
 /TOOLS/GITHUB/CLEAN-ROOT.cmd
+
+# Local release validation, scratch files and toolchain temporary files.
+/WORK/
+/TEMP/

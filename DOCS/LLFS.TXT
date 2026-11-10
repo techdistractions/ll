@@ -1,0 +1,180 @@
+LITE LINK LLFS 0.0.2 - READ/WRITE DRIVE
+========================================
+LLFS mounts a Windows folder as a DOS drive. DOS applications use ordinary
+file operations, including creating and changing files. Booting from a floppy
+without a local hard disk is supported. Choose the drive letter in LL.INI.
+
+Lite Link 0.0.14 pairs LLFS 0.0.2 with LLShell32 0.0.14. Use the matching
+host from this release.
+
+FILES
+  DOS\LLFS.EXE       Resident DOS network filesystem client.
+  DOS\LL.INI         Example client configuration; edit before mounting.
+  WINDOWS\LLSH32.EXE Matching graphical Windows host and file manager.
+  WINDOWS\LL.INI     Host configuration; ROOT is the exported folder.
+  WINDOWS\FILES      Initially empty example export.
+  DOCS\LLFS-DEV.TXT         Source layout, protocol and memory design.
+  THIRDPARTY.TXT     Attribution for DOS structure definitions.
+Paths in this guide are relative to the extracted package root.
+The source archive additionally contains SOURCE, MAKEFILE and BUILD.BAT.
+No DOS/Windows operating-system files, emulator, ROMs or compiler are bundled.
+
+QUICK START
+  1. Extract the binary archive. Create or choose a host export folder.
+  2. Edit WINDOWS\LL.INI: set ROOT, BIND and PORT. BIND defaults to loopback
+     (127.0.0.1). For a physical client choose the host's actual LAN address.
+     Start LLSH32.EXE. The window displays its listening address and port.
+  3. Copy LLFS.EXE and the DOS LL.INI to your boot floppy or local DOS folder.
+     Configure the DOS NIC, IP, netmask, gateway, DNS, host and TCP port.
+  4. Set LASTDRIVE=Z in CONFIG.SYS, or another letter covering the chosen drive.
+     Keep COMMAND.COM and COMSPEC on your boot disk. Restart DOS if necessary.
+  5. Run LLFS. After it mounts, use the chosen drive normally, for example:
+       C:
+       DIR
+       MD WORK
+       ECHO HELLO > C:\WORK\HELLO.TXT
+       TYPE C:\WORK\HELLO.TXT
+  6. Close programs and files. Switch to a local drive, e.g. A:, then LLFS /U.
+     Do not close the host while applications still have remote files open.
+
+READ/WRITE SWITCHES
+  Writes require BOTH settings below. Each defaults to ON (read-only).
+  DOS LL.INI:
+    [FILESYSTEM]
+    READONLY=OFF
+  Windows LL.INI:
+    [HOST]
+    READONLY=OFF
+  Restart the host and remount LLFS after changing them. A writable client
+  mount against a read-only host fails explicitly. A read-only client remains
+  read-only even when the host permits writes. These switches control the
+  LLFS mapped-drive service, not the separate LLShell file-manager commands.
+
+CLIENT CONFIGURATION EXAMPLE
+  [NETWORK]
+  NIC=NE2000
+  NICBASE=300
+  IP=192.168.0.20
+  NETMASK=255.255.255.0
+  GATEWAY=192.168.0.1
+  DNS=192.168.0.1
+  TIMEOUT=30
+  [SHELL]
+  HOST=192.168.0.10
+  PORT=21210
+  [FILESYSTEM]
+  DRIVE=C
+  SHARE=FILES
+  READONLY=OFF
+  TIMEOUT=30
+  [ISO]
+  ENABLED=OFF
+
+  Choose a free letter C through Z, with or without a colon. It is not compiled
+  into LLFS. SHARE=FILES names the host ROOT export. TIMEOUT is 2..60 seconds;
+  FILESYSTEM TIMEOUT takes precedence when placed after NETWORK TIMEOUT.
+  HOST accepts an IPv4 literal or hostname. NICBASE and IDPORT are hexadecimal;
+  other numbers above are decimal. NIC also accepts PICOMEM or 3C509/3C509B.
+  For 3Com, IDPORT defaults to 110h; set it explicitly if needed. Backends use
+  direct polling: do not load a packet driver or another owner of that NIC.
+
+HOST CONFIGURATION EXAMPLE
+  [NETWORK]
+  TIMEOUT=30
+  BLOCKSIZE=512
+  [HOST]
+  BIND=127.0.0.1
+  PORT=21210
+  ROOT=FILES
+  LOG=HOST.LOG
+  READONLY=OFF
+
+  ROOT is an existing Windows folder, resolved at startup. The export remains
+  anchored there when the GUI browses elsewhere. BIND may be a local IPv4
+  address or 0.0.0.0. Use a dedicated export on a trusted network: the protocol
+  checks integrity but does not authenticate peers or encrypt traffic. Leave
+  unrelated private files outside the export. No firewall rule is installed.
+  Both endpoints find LL.INI beside the executable, falling back to the current
+  directory when the executable path is unavailable. LLFS writes LLFS.LOG in
+  the working directory during install/unmount; resident operations do not log
+  to DOS files. Host startup and service details are recorded in HOST.LOG.
+
+SUPPORTED FILE OPERATIONS
+  Read; create or truncate; open for read/write; append; seek; zero-length-write
+  truncation/extension; commit; close; duplicate handles; exact file/directory
+  rename; delete (including wildcards); mkdir/rmdir; directory traversal and
+  searches; attributes; explicit DOS timestamps; DOS 3.x byte-range locks.
+  Sharing modes and locks are mapped to Windows file handles. Close files
+  before renaming them. Available space is capped at DOS's approximately 2 GiB
+  reporting range; this is not the host's full disk capacity.
+
+FAILURES AND RECOVERY
+  Each write is acknowledged only after the host's WriteFile/SetEndOfFile and
+  FlushFileBuffers calls succeed. TCP retransmits bytes as needed; application
+  sequence and CRC checks reject duplicated/corrupt frames before dispatch.
+  A lost reply can mean a write happened without its acknowledgment arriving.
+  LLFS reports an error and invalidates the session; it does NOT reconnect or
+  replay mutations. Close affected files, switch to A:, run LLFS /U, inspect
+  the affected host files, then mount again. Unmount warns of an uncertain
+  write outcome. A multi-block file update is not a whole-file transaction.
+  Host flush success is the durability boundary, not a guarantee about storage
+  hardware surviving power loss. Keep backups of data used with this release.
+
+MEMORY AND OWNERSHIP
+  Resident size: 13,184 bytes, including the PSP and a 512-byte private stack.
+  DOS adds one 16-byte memory header: total conventional cost 13,200 bytes.
+  This saves 5,040 resident bytes (27.7%) versus the initial writable build.
+  The full allocation was recovered on unmount. Both native NIC backends,
+  512-byte TCP RX/TX queues, Ethernet frame capacity and CRC32 remain enabled.
+  Setup code, literal messages, environment and startup stack are discarded.
+  The measured private-stack high-water was 140 bytes in the DOS API test;
+  a 512-byte reservation retains interrupt and backend margin. Physical-card
+  TSR testing remains necessary; this is not a universal stack-depth bound.
+  LLFS owns its NIC while mounted. Unmount before LLGet, LLTime, LLShell or
+  NETDIAG uses that same NIC. An LLFS drive cannot stay mapped through the
+  completely-unloaded LLShell RPC mode: use these as separate operating modes.
+
+QUALIFICATION AND LIMITS
+  Tested: actual MS-DOS 3.30 floppy boot, DOSBox-X 8086 at 750 cycles, plus a
+  diskless 86Box 8088 at 4.77 MHz with 640 KiB and VGA. Native host: Windows 11.
+  Windows 2.03 launched over the mapped drive and a Win16 test saved/reopened
+  a file and updated WIN.INI on the host. C: and E: configuration were tested.
+  The network used virtual NE2000 Ethernet, SLiRP and real loopback Windows TCP.
+  Physical-LAN/physical-NIC TSR operation and Windows 3.1/Win32s host runtime
+  are UNVERIFIED. Windows-to-DOS shutdown was not tested.
+  Only actual DOS 3.30 is accepted; later DOS layout support is future work.
+  One active peer per host. Up to 16 file handles and 16 search slots; an
+  expired search returns no-more-files. Paths: DOS 8.3 or available Windows
+  short aliases, maximum 126 characters. Files must be smaller than 2 GiB.
+  Wildcard rename, ISO/MSCDEX, raw sectors, FORMAT/FDISK, automatic reconnect,
+  cross-client caching and sharing one NIC with another DOS stack are absent.
+  Read-only release-001 clients remain read-only with this new host.
+
+BUILDING FROM SOURCE
+  Install Open Watcom 2.x separately, including its 16-bit C compiler, 32-bit C
+  compiler, assembler, linker, resource compiler, WMAKE and DOS/Windows headers
+  and libraries. The binary host is x86 even on 64-bit Windows.
+  Extract the source ZIP to a clean folder. Do not build inside an older source
+  checkout. From that folder, in COMMAND.COM or CMD.EXE:
+    SET WATCOM=C:\WATCOM
+    BUILD.BAT nt64
+  This uses native 64-bit Windows tools and builds all targets into OUT.
+  On a 32-bit Windows development system use BUILD.BAT nt.
+  For DOS-hosted Watcom tools use BUILD.BAT (or BUILD.BAT dos).
+  The DOS-hosted compiler needs a suitable 386+ development PC and its Watcom
+  DOS-extender setup. It is not an 8088-hosted compiler. The generated DOS
+  programs use 8086 instructions and run on an 8088.
+  No Python or PowerShell is needed to build or run the packaged programs.
+  BUILD.BAT sets INCLUDE to the toolchain's H and H\NT folders. MAKEFILE
+  selects binw, binnt or binnt64, and explicitly includes this source's headers.
+  Keep the source layout unchanged. Read BUILD.LOG and compiler output on error.
+  To build just DOS targets: BUILD.BAT nt64 dos
+  To build just the Windows host: BUILD.BAT nt64 windows
+  On DOS the corresponding commands are BUILD.BAT dos and BUILD.BAT windows.
+  OUT contains LLFS.EXE, LLSHELL.EXE, LLGET.EXE, LLTIME.EXE, LLNIC.EXE,
+  NETDIAG.EXE, AUMON.COM, LLSTART.BAT and LLSH32.EXE. The other suite programs
+  retain their existing roles. BUILD nt64 tests adds the optional DOS verifier.
+  The EXEs and maps are generated files; OBJ/RES files may be removed before a
+  clean rebuild. There is no dependency download or generated-code script.
+  Windows retains the legacy Win32s build settings, but runtime qualification
+  for this changed host must be done separately before claiming Win32s support.

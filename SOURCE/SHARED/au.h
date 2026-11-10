@@ -6,9 +6,11 @@
 
 #ifndef AU_H
 #define AU_H
+#ifndef AU_H_TYPES
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned long u32;
+#endif
 #define BLOCK 512
 #define HELLO 1
 #define WELCOME 2
@@ -83,7 +85,16 @@ static int wirein(u8*,unsigned);
 static u8 payload[BLOCK],header[16];
 static u16 plen;
 static u32 txid,rxid;
+#ifdef LLFS_COALESCE
+/* LLFS requests are <=490 bytes. Pack header+body into the existing buffer,
+ * eliminating a separate small TCP segment and delayed-ACK wait per request.
+ * No extra resident buffer. Input may alias payload, so move backwards.
+ */
+static int frameout(u8 kind,const u8*p,unsigned n){unsigned i;u32 c;if(n>BLOCK-16)return 0;c=crcstep(0xffffffffUL,p,n)^0xffffffffUL;for(i=n;i;i--)payload[16+i-1]=p[i-1];set16(payload,0x5541);set16(payload+2,0x5441);payload[4]=1;payload[5]=kind;set16(payload+6,n);set32(payload+8,txid++);set32(payload+12,c);return wireout(payload,n+16);}
+#else
 static int frameout(u8 kind,const u8*p,unsigned n){if(n>BLOCK)return 0;copy(header,"AUAT",4);header[4]=1;header[5]=kind;set16(header+6,n);set32(header+8,txid++);set32(header+12,crcstep(0xffffffffUL,p,n)^0xffffffffUL);return wireout(header,16)&&(!n||wireout(p,n));}
+#endif
+
 /* Return a message kind only after exact-length, sequence and payload-CRC checks.
  * A framing failure invalidates this connection; do not scan for a new header. */
 static int framein(void){u32 c;if(!wirein(header,16))return -1;if(header[0]!='A'||header[1]!='U'||header[2]!='A'||header[3]!='T'||header[4]!=1||get32(header+8)!=rxid++)return -1;plen=get16(header+6);if(plen>BLOCK||!wirein(payload,plen))return -1;c=crcstep(0xffffffffUL,payload,plen)^0xffffffffUL;if(c!=get32(header+12))return -1;return header[5];}

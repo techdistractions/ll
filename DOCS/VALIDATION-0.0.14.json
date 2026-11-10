@@ -1,0 +1,69 @@
+{
+  "version": "0.0.14",
+  "LLFS_version": "0.0.2",
+  "date": "2026-11-10",
+  "build": "Open Watcom 2 native x64; all 8 application targets plus optional DOS verifier",
+  "DOS_API": "PASS (0 errors), actual DOS 3.30 / emulated 8086 750 cycles",
+  "resident_bytes": 13184,
+  "MCB_bytes": 16,
+  "total_conventional_bytes": 13200,
+  "unmount_memory_restored": true,
+  "returned_file_bytes": 4099,
+  "returned_SHA256": "5f080242526981d5b61117c08f2fc5783ac1d7d6fc30ab7bde2f0e0016767d2a",
+  "lost_ack": "write committed once, reply deliberately lost; DOS error and no replay/reconnect",
+  "guards": [
+    "bad payload CRC rejected before write",
+    "duplicate frame sequence rejected; original data preserved",
+    "path traversal, absolute volume and DOS devices rejected",
+    "read-only host refuses writable mount",
+    "read-only enforcement cannot be bypassed by direct CREATE request",
+    "legacy protocol-1 client stays read-only on a writable host"
+  ],
+  "legacy_regression": {
+    "jobs": 3,
+    "connections": 4,
+    "bidirectional_transfer": true,
+    "HTTP": [
+      "/test.bin"
+    ],
+    "SNTP": 1
+  },
+  "diskless_8088": {
+    "DOS": "3.30",
+    "clock_hz": 4772728,
+    "RAM_KiB": 640,
+    "VGA": true,
+    "HDD": false,
+    "drive": "C",
+    "Windows": "2.03",
+    "Win16_save_and_reopen": true,
+    "WIN_INI_saved": true
+  },
+  "native_host": {
+    "binds": [
+      "127.0.0.1",
+      "0.0.0.0"
+    ],
+    "GUI_and_Winsock_startup": true,
+    "separate_native_client": true,
+    "stays_alive": true,
+    "independent_IP_Helper_owner_port_observed": true,
+    "netstat_listener_enumeration": "inconclusive; did not show this listener; raw IP Helper endpoint state was 0, not labeled LISTENING"
+  },
+  "unverified": [
+    "physical-card LLFS TSR",
+    "updated Win3.1/Win32s host",
+    "diskless Windows normal shutdown"
+  ],
+  "binary_SHA256": {
+    "AUMON.COM": "dbfdac9b36a86ef5f2a0b1cff443d922c0773c46340ffb559ac735ba11e7ab99",
+    "LLFS.EXE": "87cc85618ff2adfdbc2ec255617cc6a4a760cfecb004e53f336b2bddd84f5634",
+    "LLGET.EXE": "7ad76a128b359d1facdd1717a8da645c67ef840c870b317f2d0be380ee707011",
+    "LLNIC.EXE": "9a7665c1186b199fdd2ee5fde5d220670f6f9626e636a86ff5191bf83aeb765f",
+    "LLRWTEST.EXE": "663044db1b4cb39309fe3d0687cb6363cb3b1ee88a52aee5022fdc60c4c98c8d",
+    "LLSH32.EXE": "5a3e80948cab6b99e62361f0d71e7cd735d8dee2110a9a39802628db07d31fc8",
+    "LLSHELL.EXE": "e33629dd8210f45d825696750d6578541048035f04aca0bd1c0eba0e53aaa096",
+    "LLTIME.EXE": "ea9048a7b2469980331447a59c39ccd3af1f6acfe4a9933dcb46a1821f517f1f",
+    "NETDIAG.EXE": "e29b67653979bb698a4cc9f7e4f5fb3ec13e915e7964bd88849420ac257c4a0d"
+  }
+}

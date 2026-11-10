@@ -67,3 +67,14 @@ Do not replace a working configuration with sample addresses.
 For the Windows-only 0.0.13 update, replace LLSH32.EXE. DOS LLShell 0.0.12 and
 utilities 0.0.11r1 do not need replacing if already installed. Recursive folder
 copying requires compatible managers on both ends (DOS 0.0.12 or later).
+
+UPGRADING TO 0.0.14 / LLFS
+Install the matching LLSH32.EXE for LLFS. Keep the existing LL.INI; add the
+optional FILESYSTEM and ISO sections from CONFIG. Both write permissions
+READONLY default ON. Set both OFF only when you want writable mapped access.
+The normal LLShell startup remains LLSTART.BAT. The alternative mapped-drive
+startup is LLFS.EXE, on actual DOS 3.30, with a free configured drive letter.
+Do not run both on the same NIC. A floppy-only machine can map C:; keep
+COMMAND.COM/COMSPEC and the LLFS program/config on the local boot disk.
+LLFS physical-card TSR operation and the changed 0.0.14 Win32s host runtime
+are UNVERIFIED; see TESTING.TXT. No emulator is required for public use.

@@ -19,7 +19,13 @@ raw_ne_start:
     mov word ptr [bx+1892],0
     mov word ptr [bx+1900],0
     cmp di,32
+IFDEF LLFS_COMPACT
+    jne fs_skip_ne_open
+    jmp ne_open
+fs_skip_ne_open:
+ELSE
     je ne_open
+ENDIF
     cmp di,33
     je ne_close
     cmp di,40
@@ -35,40 +41,74 @@ raw_ne_start:
 ne_reentrant:
     mov ax,424
     jmp ne_return_noguard
+IFDEF LLFS_COMPACT
+_TEXT ends
+FSINIT segment word public 'INITCODE'
+ENDIF
 ne_open:
     cmp word ptr [bx+2],0
+IFDEF LLFS_COMPACT
+    je fs_long_17
+    jmp ne_unsupported
+fs_long_17:
+ELSE
     jne ne_unsupported
+ENDIF
     cmp word ptr [bx+8],0
+IFDEF LLFS_COMPACT
+    je fs_long_18
+    jmp ne_success
+fs_long_18:
+ELSE
     jne ne_success
-    mov dx,[bx+CFG_NIC-1920]
+ENDIF
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     in al,dx
     cmp al,0FFh
+IFDEF LLFS_COMPACT
+    jne fs_long_19
+    jmp ne_missing
+fs_long_19:
+ELSE
     je ne_missing
+ENDIF
     ; STOP takes precedence: RTL8019AS CR=23h is stopped, despite STA=1.
     ; Refuse a running adapter (STA=1, STP=0), not the harmless STA latch.
     test al,1
     jnz ne_acquire
     test al,2
+IFDEF LLFS_COMPACT
+    jz fs_long_20
+    jmp ne_owned
+fs_long_20:
+ELSE
     jnz ne_owned
+ENDIF
 ne_acquire:
     mov word ptr [bx+NE_OWNER],1
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,01Fh
     in al,dx
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,21h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,007h
     in al,dx
     test al,80h
+IFDEF LLFS_COMPACT
+    jnz fs_long_21
+    jmp ne_missing
+fs_long_21:
+ELSE
     jz ne_missing
-    mov dx,[bx+CFG_NIC-1920]
+ENDIF
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,00Fh
     xor al,al
     out dx,al                    ; IMR=0; never request IRQ5
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,00Eh
     mov al,48h                  ; byte DMA, FIFO threshold 8
     out dx,al
@@ -76,17 +116,41 @@ ne_acquire:
     mov cx,32
     lea di,[bx+NE_PROM]
     call ne_read_dma
+IFDEF LLFS_COMPACT
+    jnc fs_long_22
+    jmp ne_dma_error
+fs_long_22:
+ELSE
     jc ne_dma_error
+ENDIF
     cmp byte ptr [bx+NE_PROM+28],57h
+IFDEF LLFS_COMPACT
+    je fs_long_23
+    jmp ne_missing
+fs_long_23:
+ELSE
     jne ne_missing
+ENDIF
     cmp byte ptr [bx+NE_PROM+30],57h
+IFDEF LLFS_COMPACT
+    je fs_long_24
+    jmp ne_missing
+fs_long_24:
+ELSE
     jne ne_missing
+ENDIF
     call ne_select_mac
+IFDEF LLFS_COMPACT
+    jnc fs_long_25
+    jmp ne_bad_frame
+fs_long_25:
+ELSE
     jc ne_bad_frame
-    mov dx,[bx+CFG_NIC-1920]
+ENDIF
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,21h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,001h
     mov al,46h
     out dx,al
@@ -99,26 +163,26 @@ ne_acquire:
     inc dx
     mov al,40h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,00Ah
     xor al,al
     out dx,al
     inc dx
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,00Dh
     mov al,2                    ; loopback during ring initialization
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,00Ch
     mov al,4                    ; accept broadcasts, no promiscuous receive
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,61h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,001h
-    lea si,[bx+CFG_HWMAC-1920]
+    lea si,[bx+CFG_HWMAC-NNET_BASE]
     mov cx,6
 ne_mac:
     mov al,[si]
@@ -140,14 +204,14 @@ ne_multicast:
     mov word ptr [bx+322],0
     mov word ptr [bx+10],0
     mov word ptr [bx+14],0
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,22h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,007h
     mov al,0FFh
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,00Dh
     xor al,al
     out dx,al                    ; normal TX
@@ -155,6 +219,10 @@ ne_multicast:
     mov ax,[bx+1884]
     mov [bx+1890],ax
     jmp ne_success
+IFDEF LLFS_COMPACT
+FSINIT ends
+_TEXT segment word public 'CODE'
+ENDIF
 ne_close:
     cmp word ptr [bx+8],0
     je ne_close_state
@@ -163,10 +231,10 @@ ne_close:
 ne_close_quiet:
     cmp word ptr [bx+8],0
     je ne_close_state
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,21h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,00Fh
     xor al,al
     out dx,al
@@ -185,7 +253,7 @@ ne_send:
     jb ne_bad_frame
     cmp cx,1514
     ja ne_bad_frame
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     in al,dx
     test al,4
     jnz ne_tx_busy
@@ -194,28 +262,28 @@ ne_send:
     jae ne_tx_length
     mov bp,60
 ne_tx_length:
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,007h
     mov al,42h
     out dx,al                    ; clear DMA-complete and TX-complete
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,008h
     xor al,al
     out dx,al
     inc dx
     mov al,40h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,00Ah
     mov ax,bp
     out dx,al
     inc dx
     mov al,ah
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,12h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,010h
     mov di,cx
 ne_tx_copy:
@@ -236,7 +304,7 @@ IFDEF LL_DIAGNOSTIC
     call diag_verify_tx
     jc ne_dma_error
 ENDIF
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,004h
     mov al,40h
     out dx,al
@@ -247,7 +315,7 @@ ENDIF
     mov al,ah
     out dx,al
     mov [bx+14],bp
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,26h
     out dx,al
 IFDEF LL_DIAGNOSTIC
@@ -309,7 +377,7 @@ ne_rx_error:
 ne_rx_one:
     cmp word ptr [bx+8],1
     jne ne_rx_empty
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,007h
     in al,dx
     test al,10h                  ; overrun: fail closed, caller reopens
@@ -324,14 +392,14 @@ ne_rx_one:
 ne_rx_cached:
     cmp word ptr [bx+NE_LEN],0
     jne ne_rx_empty
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,62h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,007h
     in al,dx
     mov ah,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,22h
     out dx,al
     cmp ah,byte ptr [bx+NE_NEXT]
@@ -370,10 +438,10 @@ ne_rx_cached:
     jae ne_rx_boundary
     mov al,7Fh
 ne_rx_boundary:
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,003h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,007h
     mov al,1
     out dx,al
@@ -405,28 +473,28 @@ ne_read_dma:
     push dx
     push bp
     mov bp,ax
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,007h
     mov al,40h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,008h
     mov ax,bp
     out dx,al
     inc dx
     mov al,ah
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,00Ah
     mov ax,cx
     out dx,al
     inc dx
     mov al,ah
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,0Ah
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,010h
 ne_rx_copy:
     in al,dx
@@ -441,14 +509,14 @@ ne_rx_copy:
     pop ax
     ret
 ne_dma_done:
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,007h
     in al,dx
     test al,40h
     jz ne_dma_incomplete
     mov al,40h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,22h
     out dx,al
     clc
@@ -488,10 +556,10 @@ ne_return:
     cmp word ptr [bx+NE_OWNER],0
     je ne_return_ready
     push ax
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     mov al,21h
     out dx,al
-    mov dx,[bx+CFG_NIC-1920]
+    mov dx,[bx+CFG_NIC-NNET_BASE]
     add dx,00Fh
     xor al,al
     out dx,al
@@ -535,9 +603,13 @@ ne_return_noguard:
 ; Raw 32-byte PROM remains untouched. Canonical six-byte MAC is shared by
 ; PAR programming, Ethernet source addresses and ARP replies.
 ; AUTO accepts standard duplicated-byte PROMs and PicoMEM packed PROMs.
+IFDEF LLFS_COMPACT
+_TEXT ends
+FSINIT segment word public 'INITCODE'
+ENDIF
 ne_select_mac:
-    mov word ptr [bx+CFG_MACSRC-1920],0
-    mov ax,[bx+CFG_MACMODE-1920]
+    mov word ptr [bx+CFG_MACSRC-NNET_BASE],0
+    mov ax,[bx+CFG_MACMODE-NNET_BASE]
     cmp ax,2
     ja ne_invalid_mac
     or ax,ax
@@ -555,9 +627,9 @@ ne_mac_pairs:
 ne_mac_packed:
     mov ax,2
 ne_mac_format:
-    mov [bx+CFG_PROMFMT-1920],ax
+    mov [bx+CFG_PROMFMT-NNET_BASE],ax
     lea si,[bx+NE_PROM]
-    lea di,[bx+CFG_HWMAC-1920]
+    lea di,[bx+CFG_HWMAC-NNET_BASE]
     mov cx,6
 ne_mac_decode:
     mov dl,[si]
@@ -569,10 +641,10 @@ ne_mac_decode:
     inc si
 ne_mac_decoded_byte:
     loop ne_mac_decode
-    lea si,[bx+CFG_MAC-1920]
+    lea si,[bx+CFG_MAC-NNET_BASE]
     cmp byte ptr [si],0
     je ne_mac_validate
-    lea di,[bx+CFG_HWMAC-1920]
+    lea di,[bx+CFG_HWMAC-NNET_BASE]
     mov cx,6
 ne_mac_override:
     call ne_mac_nibble
@@ -596,9 +668,9 @@ ne_mac_override:
 ne_mac_override_end:
     cmp byte ptr [si],0
     jne ne_invalid_mac
-    mov word ptr [bx+CFG_MACSRC-1920],1
+    mov word ptr [bx+CFG_MACSRC-NNET_BASE],1
 ne_mac_validate:
-    lea si,[bx+CFG_HWMAC-1920]
+    lea si,[bx+CFG_HWMAC-NNET_BASE]
     test byte ptr [si],1
     jnz ne_invalid_mac
     xor dl,dl
@@ -637,3 +709,8 @@ ne_mac_digit:
 ne_mac_bad_nibble:
     stc
     ret
+
+IFDEF LLFS_COMPACT
+FSINIT ends
+_TEXT segment word public 'CODE'
+ENDIF

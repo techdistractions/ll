@@ -125,3 +125,22 @@ Missing Windows imports: check lib386\nt and the complete Win32 target install.
 Missing WRC/resource: check wrc.exe and LLICON.ICO; do not flatten SOURCE folders.
 DOS extender error: check CPU, extended memory and DOS4GW on PATH.
 Cannot write EXE: close the running program or build in another source folder.
+
+0.0.14 ADDITIONS
+-----------------
+OUT also includes LLFS.EXE. Its C/assembly implementation and static link file
+use the same toolchain; no generated source or scripting runtime is required.
+The LLFS resident private stack is 512 bytes. Its separate 1024-byte startup
+stack and setup code/data are freed at mount; it does not use the managers'
+4096-byte resident stack contract. See LLFS-DEV.TXT for the critical link order.
+
+Optional public verifier:
+  BUILD nt64 tests       Native x64 build of OUT\LLRWTEST.EXE.
+  BUILD nt tests         Native x86 build.
+  BUILD tests            DOS-hosted build on a suitable 386+ development PC.
+LLRWTEST.C uses the standard DOS C runtime and 8086 code generation.
+The binary package includes TESTS\LLRWTEST.EXE; it is not a runtime dependency.
+For full rebuilding extract SOURCE to a clean folder, set WATCOM to YOUR
+compiler path and run BUILD. No private C:\Retro tree, emulator, ROM, licensed
+OS image or developer network configuration is required for compilation.
+This version's changed Windows 3.1/Win32s runtime remains UNVERIFIED.

@@ -1,0 +1,7 @@
+format dos
+option quiet
+option stack=4096
+option map=OUT\LLRWTEST.MAP
+name OUT\LLRWTEST.EXE
+file OUT\LLRWTEST.OBJ
+libpath '%WATCOM%\lib286\dos'

@@ -15,7 +15,7 @@
 #endif
 #include "au.h"
 #if defined(LITELINK) && defined(LEGACY_WIN32S)
-#define LLHOSTVER "0.0.13"
+#define LLHOSTVER "0.0.14"
 #else
 #define LLHOSTVER "0.0.9"
 #endif
@@ -56,7 +56,7 @@ static int waitio(int sending){fd_set f;struct timeval tv;DWORD start=GetTickCou
 #endif
  }while(GetTickCount()-start<timeoutms);return 0;}
 static int wireout(const u8*p,unsigned n){int r;while(n){if(!waitio(1)){transport_failed=1;return 0;}r=send(peer,(const char*)p,n,0);if(r<=0){transport_failed=1;return 0;}p+=r;n-=r;}return 1;}
-static int wirein(u8*p,unsigned n){int r;while(n){if(!waitio(0)){transport_failed=1;return 0;}r=recv(peer,(char*)p,n,0);if(r<=0){transport_failed=1;return 0;}p+=r;n-=r;}return 1;}
+static int wirein(u8*p,unsigned n){int r;unsigned original=n;while(n){if(!waitio(0)){lognum("wirein timeout remaining",n);lognum("wirein original",original);transport_failed=1;return 0;}r=recv(peer,(char*)p,n,0);if(r<=0){transport_failed=1;return 0;}p+=r;n-=r;}return 1;}
 static int writeall(HANDLE f,const u8*p,DWORD n){DWORD z;return WriteFile(f,p,n,&z,0)&&z==n;}
 static int recvfile(const char*local){char name[13],dest[260],tmp[260];u32 size,want,total=0,c=0xffffffffUL;HANDLE f;int k,err=OK;
  last_transfer_status=INVALID;if(plen!=21)return statusout(READY,INVALID);copy(name,payload,13);if(name[12]||!valid(name)||!path(dest,local?local:name))return statusout(READY,INVALID);
@@ -83,7 +83,8 @@ static int invalidprobe(const char*name,int expected){u8 meta[21];zero(meta,21);
 
 static int remoteop(int kind,const char*a,const char*b,int expected){u8 data[26];unsigned n=slen(a)+1;if(n>13)return 0;copy(data,a,n);if(b){unsigned m=slen(b)+1;if(m>13)return 0;copy(data+n,b,m);n+=m;}return frameout(kind,data,n)&&statusin(RESULT)==expected;}
 static int remotelist(void){int k;unsigned count=0;if(!frameout(LIST,0,0))return 0;while((k=framein())==ENTRY){if(plen!=22||payload[12]||!valid((char*)payload))return 0;logline((char*)payload);if(++count>4096)return 0;}return k==RESULT&&plen==2&&get16(payload)==OK;}
-static int acceptpeer(void){fd_set f;struct timeval tv;int k,n=sizeof(struct sockaddr_in);struct sockaddr_in from;char req[80];FD_ZERO(&f);FD_SET(listener,&f);tv.tv_sec=accept_timeout;tv.tv_usec=0;if(select(0,&f,0,0,&tv)<=0)return 0;peer=accept(listener,(struct sockaddr*)&from,&n);if(peer==INVALID_SOCKET){stage_record("FAIL","accept","WINSOCK",WSAGetLastError(),"Peer accept failed");return 0;}textcopy(req,"TCP ACCEPT peer=");textcopy(req+slen(req),inet_ntoa(from.sin_addr));textcopy(req+slen(req),":");diaguint(req,ntohs(from.sin_port));logline(req);peer_ip=from.sin_addr.s_addr;txid=rxid=0;k=framein();if(k!=HELLO||plen!=14||payload[13]>7)return 0;copy(req,payload,13);req[13]=0;logline(req);request_pending=payload[13]&1;remote_resume=(payload[13]&2)!=0;remote_interactive=(payload[13]&LL_CAP_MANAGER)!=0;transport_failed=0;if(!remote_resume)peerfolder[0]=0;peer_tree=same(req,"LLSHELL 0.012");if(peer_tree){u8 caps[2];set16(caps,1);if(!frameout(WELCOME,caps,2))return 0;}else if(!frameout(WELCOME,0,0))return 0;logline("HANDSHAKE PASS");return 1;}
+#include "FS.C"
+static int acceptpeer(void){fd_set f;struct timeval tv;int k,n=sizeof(struct sockaddr_in);struct sockaddr_in from;char req[80];FD_ZERO(&f);FD_SET(listener,&f);tv.tv_sec=accept_timeout;tv.tv_usec=0;if(select(0,&f,0,0,&tv)<=0)return 0;peer=accept(listener,(struct sockaddr*)&from,&n);if(peer==INVALID_SOCKET){stage_record("FAIL","accept","WINSOCK",WSAGetLastError(),"Peer accept failed");return 0;}textcopy(req,"TCP ACCEPT peer=");textcopy(req+slen(req),inet_ntoa(from.sin_addr));textcopy(req+slen(req),":");diaguint(req,ntohs(from.sin_port));logline(req);peer_ip=from.sin_addr.s_addr;txid=rxid=0;k=framein();if(k!=HELLO||plen!=14||payload[13]>7)return 0;copy(req,payload,13);req[13]=0;logline(req);request_pending=payload[13]&1;remote_resume=(payload[13]&2)!=0;remote_interactive=(payload[13]&LL_CAP_MANAGER)!=0;transport_failed=0;if(!remote_resume)peerfolder[0]=0;peer_fs=same(req,"LLFS    0.001")||same(req,"LLFS    0.002");fs_reset();fs_v2=same(req,"LLFS    0.002");peer_tree=same(req,"LLSHELL 0.012");if(peer_fs){int one=1;if(setsockopt(peer,IPPROTO_TCP,TCP_NODELAY,(const char*)&one,sizeof(one))==SOCKET_ERROR){lognum("LLFS TCP_NODELAY failure",WSAGetLastError());return 0;}}if(peer_tree||peer_fs){u8 caps[2];set16(caps,peer_fs&&fs_v2&&!options.fs_readonly?3:1);if(!frameout(WELCOME,caps,2))return 0;}else if(!frameout(WELCOME,0,0))return 0;logline("HANDSHAKE PASS");return 1;}
 static int requestfile(void){char req[13];int st,k;if(!request_pending)return -1;request_pending=0;k=framein();if(k!=REQUEST||plen<2||plen>13||payload[plen-1])return 0;copy(req,payload,plen);if(!valid(req))return 0;st=sendfile(req,req,0,0);if(st==MISSING||st==IOERR||st==INVALID){if(!statusout(RESULT,st))return -1;}return st;}
 static char scriptbuf[8192];
 static char*words[5];
@@ -140,6 +141,7 @@ static int runscript(const char*filename){HANDLE f;DWORD n;char*s,*e;int wc,ok,s
  else if(same(words[0],"POLL")&&wc==1)ok=peer_poll();
  else if(words[0][0]=='G'&&words[0][1]=='U'&&words[0][2]=='I')ok=gui_test(words,wc);
 #endif
+ else if(same(words[0],"FSSERVE")&&wc==1)ok=fs_serve();
  else if(same(words[0],"REQUEST")&&wc==1)ok=requestfile()==OK;
  else if(same(words[0],"REQUESTMISSING")&&wc==1)ok=requestfile()==MISSING;
  else if(same(words[0],"JOBWAIT")&&wc==2){resume_wait=decimal(words[1]);ok=resume_wait>=1&&resume_wait<=3600;}

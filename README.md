@@ -2,13 +2,15 @@
 
 **Experimental micro-networking for DOS and XT-class computers.**
 
+Current version: **0.0.14**. Read/write LLFS is implemented; physical-NIC LLFS and the updated Windows 3.1/Win32s host are **unverified**. See [validation status](DOCS/VALIDATION-0.0.14.md).
+
 ## What it is
 
 Lite Link (LL) is an experimental micro-networking suite for DOS, designed for systems with 8088 CPUs and 256 KB RAM or more.
 
 Rather than relying on a conventional resident network driver and full networking stack, LL uses register-level hardware access and a lightweight, minimal TCP/UDP implementation to communicate over a local network or the Internet.
 
-Lite Link provides a common networking foundation for a growing suite of tools and utilities, designed to bring useful networking capabilities to early DOS computers without the overhead of traditional networking software.
+Lite Link provides a common networking foundation for a growing suite of tools and utilities, designed to bring useful networking capabilities to early DOS computers without the overhead of traditional networking software. LLFS is the optional resident mode: its drive remains available after returning to the DOS prompt; the other DOS utilities own the NIC only while running.
 
 ## The Lite Link suite
 
@@ -17,6 +19,7 @@ Lite Link provides a common networking foundation for a growing suite of tools a
 | Tool | Purpose |
 | --- | --- |
 | **LLShell (`LLSHELL.EXE`)** | DOS dual-pane file manager. Browse and transfer files between DOS and Windows, manage directories, copy folder trees and submit remote DOS commands. |
+| **LLFS (`LLFS.EXE`)** | Mount a Windows folder as a DOS drive, read-only or read/write. Actual DOS 3.30 only in this release. |
 | **LLShell32 (`LLSH32.EXE`)** | Windows graphical file manager and network listener. Runs on Windows 3.1 with Win32s/Winsock and on modern Windows. |
 
 ### Network utilities
@@ -40,6 +43,9 @@ Lite Link is intended to grow beyond these tools. LLShell is **one application w
 
 ## Supported systems
 
+The table describes suite targets. LLFS currently requires actual DOS 3.30. The changed 0.0.14 Windows host has been exercised on Windows 11; Windows 3.1/Win32s for this version is unverified. The preceding 0.0.13 Windows executable was tested on both.
+
+
 | DOS computer | Windows computer |
 | --- | --- |
 | DOS 3.3 or later | Windows 3.1 with Win32s 1.1 and a compatible Winsock provider, or modern Windows |
@@ -53,10 +59,10 @@ DOS tools use a direct polled NIC backend; they do **not** require a resident pa
 
 | Package | Contents |
 | --- | --- |
-| `LITELINK-0.0.13-BINARY.ZIP` | Ready-to-run DOS and Windows programs, examples and user guides |
-| `LITELINK-0.0.13-SOURCE.ZIP` | Source, examples, documentation and Open Watcom build files |
+| `LITELINK-0.0.14-BINARY.ZIP` | Ready-to-run DOS and Windows programs, examples and user guides |
+| `LITELINK-0.0.14-SOURCE.ZIP` | Source, examples, documentation and Open Watcom build files |
 
-Release 0.0.13 includes LLShell32 **0.0.13**, DOS LLShell **0.0.12** and the networking utilities **0.0.11r1**. The component version banners are intentionally different.
+Release 0.0.14 adds LLFS **0.0.2** and includes LLShell32 **0.0.14**, DOS LLShell **0.0.12** and the networking utilities **0.0.11r1**. The component version banners are intentionally different.
 
 ## Getting started
 
@@ -84,6 +90,16 @@ The DOS and Windows file managers show local and remote files. Select a source p
 On DOS, **Tab** switches panes, **Space/Insert** tags files, **F5** copies, **F2** refreshes, **F8** enters a command and **F10** exits. On Windows, select multiple items with Ctrl-click/Ctrl+A; **F5** copies and **F4** retries a paused queue.
 
 Remote DOS commands require `[EXECUTION] ALLOWRUN=ON` and DOS startup through `LLSTART.BAT`. The DOS manager exits while the command executes and reconnects afterward. Remote commands are not restricted to the shared-file directory, so leave this feature disabled unless needed on a trusted network.
+
+## A mapped DOS drive with LLFS
+
+Start the matching Windows host, configure a free drive letter in the DOS `[FILESYSTEM]` section, then run `LLFS` on actual MS-DOS 3.30. An existing `LASTDRIVE` in CONFIG.SYS must cover that letter. A floppy-only PC can map C:; the letter is configurable.
+
+Both the DOS `[FILESYSTEM] READONLY` and Windows `[HOST] READONLY` default to `ON`. Set **both** to `OFF` for writes, restart the host and mount again. Use a dedicated export. `LLFS /U` unmounts after files are closed and you switch to a local drive. Do not run another program owning that NIC while LLFS is mounted.
+
+The measured conventional allocation is **13,184 resident bytes plus a 16-byte DOS memory header**. DOS read/write APIs, lost-acknowledgment handling, complete memory recovery and a diskless 8088 Windows 2 save test passed in the documented emulators. Physical-card TSR operation and the updated Win32s runtime remain **unverified**, not known failures. ISO/MSCDEX and later-DOS redirector layouts are not implemented.
+
+See [LLFS setup, supported operations and recovery](DOCS/LLFS.TXT) and [public hardware-testing instructions](DOCS/TESTING.TXT). `LLRWTEST.EXE` is an optional verifier; no emulator or fixed boot drive is required.
 
 ## Documentation
 
@@ -117,4 +133,4 @@ The source archive builds with Open Watcom (DOS and Win32 targets). See [the bui
 
 ## Security and limitations
 
-Lite Link 0.0.13 is experimental and intended for a **trusted LAN**. It does not authenticate peers or encrypt transfers, provides no native HTTPS/TLS support and does not offer a DOS DHCP client. CRC checks detect accidental corruption; they are not cryptographic authentication. Do not expose command execution or shared folders to an untrusted network.
+Lite Link 0.0.14 is experimental and intended for a **trusted LAN**. It does not authenticate peers or encrypt transfers, provides no native HTTPS/TLS support and does not offer a DOS DHCP client. CRC checks detect accidental corruption; they are not cryptographic authentication. Do not expose command execution or shared folders to an untrusted network.

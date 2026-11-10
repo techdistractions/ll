@@ -17,7 +17,8 @@ if errorlevel 1 goto FAIL
 goto END
 :NOWATCOM
 echo Set WATCOM first. Example: SET WATCOM=C:\WATCOM
-goto END
+goto FAIL
 :FAIL
 echo Build failed. Read the first compiler or linker error above.
+if "%OS%"=="Windows_NT" exit /b 1
 :END
