@@ -134,3 +134,7 @@ The source archive builds with Open Watcom (DOS and Win32 targets). See [the bui
 ## Security and limitations
 
 Lite Link 0.0.14 is experimental and intended for a **trusted LAN**. It does not authenticate peers or encrypt transfers, provides no native HTTPS/TLS support and does not offer a DOS DHCP client. CRC checks detect accidental corruption; they are not cryptographic authentication. Do not expose command execution or shared folders to an untrusted network.
+
+## License
+
+Original Lite Link code is released under **The Unlicense**; see [LICENSE](LICENSE). Third-party portions retain their own terms: EtherDFS-derived DOS structures are MIT-licensed, and linked Open Watcom runtime code retains its separate license. See [third-party notices](THIRDPARTY.TXT) and [the provenance review](DOCS/LICENSING.TXT). The published v0.0.13 release remains unchanged.

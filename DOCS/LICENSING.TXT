@@ -1,0 +1,53 @@
+LITE LINK 0.0.14 - LICENSE AND PROVENANCE REVIEW
+================================================
+FIRST-PARTY CODE
+At the project maintainer's request, the original Lite Link code is released
+under the standard Unlicense dedication, copied verbatim to LICENSE/UNLICENSE
+from the SPDX license-list text. The Unlicense has no copyright-holder field;
+no personal/company name has been invented or substituted. OpenAI Codex
+remains credited for development assistance, not claimed as copyright owner.
+
+The source Git history before this release identifies the original source
+commits under the maintainer's TD identity. The repository/GitHub administrative
+identity is techdistractions. Git authorship alone is not a legal ownership
+registry; the dedication is made on the maintainer's express instruction for
+their original project code. No third-party dedication is attempted.
+
+REVIEWED THIRD-PARTY BOUNDARIES
+- DOS3.H is adapted from EtherDFS-3. It retains Mateusz Viste's and Frank
+  Haeseler's copyright notices. The upstream application carries an MIT
+  permission notice, reproduced in LICENSES\ETHERDFS.TXT. Its original source:
+  https://github.com/CryptusDE/EtherDFS-3
+- The upstream Watcom-derived CHINT086.ASM is reference-only. It is absent
+  from the Lite Link source, build inputs and linked objects. FSHOOK.ASM is
+  Lite Link's own interrupt hook implementation.
+- The 3Com backend is documented as independently implemented from the 3Com
+  hardware reference. No Crynwr packet-driver implementation is included.
+- The NE2000/TCP foundation derives from the maintainer's NowBasic/NETLAB
+  project. Its provenance is not represented as an external GPL grant.
+- No separate GPL-only third-party implementation was identified in the
+  distributed source/build inputs. This is a bounded source/build audit,
+  not a guarantee about unknown or undisclosed ownership claims.
+
+COMPILER RUNTIME
+The build uses Open Watcom. Link maps show unmodified arithmetic helper code
+in LLGet/LLTime/LLNIC/NETDIAG, and standard C startup/runtime in the optional
+LLRWTEST verifier. These parts keep their upstream license and copyrights;
+they are not part of the public-domain dedication. A full license copy,
+source URL and executable-embedded availability notice are supplied. No
+compiler or runtime source has been modified or relicensed. See THIRDPARTY.TXT.
+LLFS uses no linked C-runtime module, so its resident allocation is unaffected
+by the added notices. Windows uses the configured system DLL imports.
+
+HISTORICAL RELEASES
+The already-published v0.0.13 release, tag and binary/source assets remain
+unchanged under the terms supplied with them. Changing the current source
+license does not withdraw earlier grants or rewrite that release's history.
+Do not replace or relabel its archives with these 0.0.14 packages.
+
+LICENSE SOURCES
+Standard Unlicense: https://spdx.org/licenses/Unlicense.html
+Authoritative dedication text: https://unlicense.org/
+Open Watcom license/source:
+https://github.com/open-watcom/open-watcom-v2/blob/master/license.txt
+https://github.com/open-watcom/open-watcom-v2/tree/master/bld/clib

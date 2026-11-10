@@ -3,5 +3,5 @@ option quiet
 option stack=4096
 option map=OUT\LLRWTEST.MAP
 name OUT\LLRWTEST.EXE
-file OUT\LLRWTEST.OBJ
+file OUT\LLRWTEST.OBJ,OUT\OWNOTICE.OBJ
 libpath '%WATCOM%\lib286\dos'

@@ -5,6 +5,6 @@ option start=start
 order clname CODE clname DATA clname BSS clname STACK
 option map=OUT\LLTIME.MAP
 name OUT\LLTIME.EXE
-file OUT\LLNET.OBJ,OUT\TIME.OBJ
+file OUT\LLNET.OBJ,OUT\TIME.OBJ,OUT\OWNOTICE.OBJ
 libpath '%WATCOM%\lib286\dos'
 library clibs.lib

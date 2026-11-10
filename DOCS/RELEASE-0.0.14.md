@@ -2,6 +2,10 @@
 
 Lite Link adds **LLFS 0.0.2**, a resident mapped-drive client for actual MS-DOS 3.30, and its matching **LLShell32 0.0.14** Windows filesystem service. Existing DOS LLShell 0.0.12 and utilities 0.0.11r1 remain included.
 
+## License update
+
+The standard Unlicense replaces the first-party GPLv3 notice for this version. This does not relicense third-party code or alter previously published v0.0.13 packages. Executables that link Open Watcom runtime routines include a source/license availability notice, with full terms in the archives. OpenAI Codex attribution remains.
+
 ## Added
 
 - Configurable DOS drive C through Z backed by the Windows host's configured ROOT folder, including floppy-boot systems without a local hard disk.
@@ -28,7 +32,7 @@ See [the validation record](VALIDATION-0.0.14.md). Emulator tests exercised actu
 
 Use the matching Windows host, preserve your working LL.INI and add the optional FILESYSTEM/ISO sections. LLFS is an alternative resident mode; unmount it before the other DOS network tools use the same card. Read `DOCS/LLFS.TXT`, `DOCS/CONFIG.TXT` and `DOCS/TESTING.TXT` before enabling writes. No emulator, Python or PowerShell is needed to use or compile the public package. No OS disk images, ROMs, compiler or private test network setup is bundled.
 
-The package layout remains DOS, WINDOWS, CONFIG and DOCS. Source and binary archives have SHA256 checksums. The existing GPL license and permissive third-party notices are preserved.
+The package layout remains DOS, WINDOWS, CONFIG and DOCS. Source and binary archives have SHA256 checksums. Original Lite Link code now uses **The Unlicense**, as requested by the maintainer. MIT notices for the adapted DOS structures and separate Open Watcom runtime terms are retained. See `DOCS/LICENSING.TXT` and `THIRDPARTY.TXT`. The existing v0.0.13 release, tag and assets are unchanged.
 
 ## AI-assisted development
 

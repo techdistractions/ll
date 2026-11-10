@@ -1,37 +1,36 @@
-Lite Link retains the existing repository LICENSE (GNU GPL version 3).
-The following permissive notice applies to the adapted DOS structures.
+LITE LINK - THIRD-PARTY NOTICES
+================================
+The original Lite Link source is dedicated under The Unlicense in LICENSE and
+UNLICENSE. That dedication does not change any third-party copyright, license
+or conditions. This package is not a claim that all bundled bits are public domain.
 
-DOS3 structure definitions adapted from EtherDFS-3.
+1. DOS STRUCTURES - MIT
+SOURCE\DOS\DOS3.H adapts EtherDFS-3 DOS structure definitions. The original
+notices for Mateusz Viste and Frank Haeseler are retained in that header.
+LICENSES\ETHERDFS.TXT contains the complete upstream MIT permission/disclaimer.
 Source: https://github.com/CryptusDE/EtherDFS-3
+Only the structure definitions were adapted. The upstream CHINT086.ASM
+(Open Watcom-licensed interrupt-chain routine) is not included or linked.
 
-/*
- * EtherDFS - a network drive for DOS running over raw ethernet
- * http://etherdfs.sourceforge.net
- *
- * Copyright (C) 2017, 2018 Mateusz Viste
- *
- *
- * This is a special version (only) for DOS 3.20 - 3.30
- *
- * forked from EtherDFS v0.8.2
- *
- * adapted to (MS-)DOS 3.20-3.30 (C) 5/2023 Frank Haeseler
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
- */
+2. OPEN WATCOM RUNTIME - SEPARATE TERMS
+Some compiled DOS programs include unmodified Open Watcom runtime routines.
+These routines are not relicensed under The Unlicense. They retain the Sybase
+Open Watcom Public License 1.0 and their upstream copyrights, including
+Portions Copyright (c) 1983-2002 Sybase, Inc. All Rights Reserved.
+The full toolchain license is reproduced in LICENSES\WATCOM.TXT.
+Runtime source is available under those terms at:
+https://github.com/open-watcom/open-watcom-v2/tree/master/bld/clib
+https://github.com/open-watcom/open-watcom-v2
+
+The release link maps identify i4d/i4m arithmetic helpers in LLGET.EXE,
+LLTIME.EXE, LLNIC.EXE and NETDIAG.EXE. TESTS\LLRWTEST.EXE uses standard DOS
+C-runtime/startup modules. These executables embed a runtime-source/license
+notice. The linked runtime is unmodified; no runtime source is relicensed or
+represented as Lite Link-authored code. The first-party dedication and the
+package's own terms are offered by the Lite Link maintainer alone, not Sybase
+or the Open Watcom contributors. Their separate disclaimers remain applicable.
+
+The compiler, DOS extender, operating systems, Windows DLLs, Winsock provider,
+emulator and ROMs are not distributed with Lite Link. Windows import libraries
+supply references to system DLLs, not redistributed copies of those DLLs.
+See DOCS\LICENSING.TXT for the review scope and historical release treatment.

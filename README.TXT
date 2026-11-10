@@ -181,3 +181,8 @@ LLFS /U releases the NIC and memory after files close and you select a local
 drive. See DOCS\LLFS.TXT for recovery/limits and DOCS\TESTING.TXT to test.
 Physical-NIC LLFS and this version's Win32s host runtime are UNVERIFIED.
 The latest implemented version is 0.0.14; individual component banners differ.
+LICENSE
+Original Lite Link code: The Unlicense (LICENSE and UNLICENSE). Third-party
+MIT structures and Open Watcom runtime keep their separate terms/notices.
+See THIRDPARTY.TXT, LICENSES and DOCS\LICENSING.TXT. The published v0.0.13
+release is unchanged. OpenAI Codex attribution is preserved.

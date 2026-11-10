@@ -144,3 +144,9 @@ For full rebuilding extract SOURCE to a clean folder, set WATCOM to YOUR
 compiler path and run BUILD. No private C:\Retro tree, emulator, ROM, licensed
 OS image or developer network configuration is required for compilation.
 This version's changed Windows 3.1/Win32s runtime remains UNVERIFIED.
+THIRD-PARTY RUNTIME NOTICES
+OWNOTICE.ASM is original notice text, linked into LLGET, LLTIME, LLNIC, NETDIAG
+and the optional LLRWTEST. The runtime code itself is unmodified and retains
+its upstream license. Both archives include LICENSES\WATCOM.TXT and source
+availability information. LLFS does not link a C-runtime module; residency
+remains unchanged. See DOCS\LICENSING.TXT.

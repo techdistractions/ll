@@ -96,6 +96,6 @@ a long path is replaced by a shorter one.
 
 `DOS/LLFS.C`, `FSRUNTIME.H`, `FSSTART.ASM`, `FSHOOK.ASM`, `FSEND.ASM` and `DOS3.H` implement the DOS 3.30 redirector. `WIN32/FS.C` implements the host endpoint; the GUI routes filesystem peers separately from manager/RPC turns. Read [LLFS-DEV.TXT](LLFS-DEV.TXT) before changing the retained/transient link order or stack.
 
-`BUILD nt64 tests` builds the public `LLRWTEST` verifier. It takes the target drive and optionally the local LLFS executable path; it assumes no A: boot disk or emulator gateway. Use a fresh dedicated export as described in `TESTING.TXT`. `THIRDPARTY.TXT` preserves the MIT notice on adapted DOS structures; the repository LICENSE is unchanged.
+`BUILD nt64 tests` builds the public `LLRWTEST` verifier. It takes the target drive and optionally the local LLFS executable path; it assumes no A: boot disk or emulator gateway. Use a fresh dedicated export as described in `TESTING.TXT`. `THIRDPARTY.TXT` preserves the MIT notice on adapted DOS structures; original Lite Link code now uses The Unlicense, while linked runtime terms remain separate. See `LICENSING.TXT`.
 
 Win32s build settings are preserved, but the changed host runtime and physical-card TSR service are **unverified**. Do not infer those results from earlier component tests.

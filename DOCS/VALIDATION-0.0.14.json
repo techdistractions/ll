@@ -58,12 +58,21 @@
   "binary_SHA256": {
     "AUMON.COM": "dbfdac9b36a86ef5f2a0b1cff443d922c0773c46340ffb559ac735ba11e7ab99",
     "LLFS.EXE": "87cc85618ff2adfdbc2ec255617cc6a4a760cfecb004e53f336b2bddd84f5634",
-    "LLGET.EXE": "7ad76a128b359d1facdd1717a8da645c67ef840c870b317f2d0be380ee707011",
-    "LLNIC.EXE": "9a7665c1186b199fdd2ee5fde5d220670f6f9626e636a86ff5191bf83aeb765f",
-    "LLRWTEST.EXE": "663044db1b4cb39309fe3d0687cb6363cb3b1ee88a52aee5022fdc60c4c98c8d",
-    "LLSH32.EXE": "5a3e80948cab6b99e62361f0d71e7cd735d8dee2110a9a39802628db07d31fc8",
+    "LLGET.EXE": "7633a461e02e32773958afc162cbd61c2b5d2315ae077ed72ae3f5a6a21baf53",
+    "LLNIC.EXE": "70e68319caf608de570d3625e0b16b1c04fbc8e465a3cdb8499c9142c2fb4070",
+    "LLRWTEST.EXE": "aed52417094080c6708cf66b6d9575066c90de81cf1c2fc7672e5952cdaf2082",
+    "LLSH32.EXE": "0f74a3a00a38bd80335ea1adea02170347c433b6791f598444c777bbc9420110",
     "LLSHELL.EXE": "e33629dd8210f45d825696750d6578541048035f04aca0bd1c0eba0e53aaa096",
-    "LLTIME.EXE": "ea9048a7b2469980331447a59c39ccd3af1f6acfe4a9933dcb46a1821f517f1f",
-    "NETDIAG.EXE": "e29b67653979bb698a4cc9f7e4f5fb3ec13e915e7964bd88849420ac257c4a0d"
+    "LLTIME.EXE": "0b86f0de442907eaa0c137ec5192a6f39ae6c3c162aa18a6f99ecda35e634680",
+    "NETDIAG.EXE": "54eb0c83859947c951d8f6f29e675033d6d0a9c80e2a4b13e407195389b1b7bc"
+  },
+  "license_revision": {
+    "first_party": "Unlicense",
+    "third_party_terms_retained": true,
+    "embedded_Watcom_notices_verified": true,
+    "post_notice_DOS_API_pass": true,
+    "post_notice_legacy_regression_pass": true,
+    "LLFS_binary_unchanged": true,
+    "Windows_code_unchanged_except_link_timestamps": true
   }
 }

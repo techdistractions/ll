@@ -21,3 +21,7 @@ The emulators used private loopback/virtual Ethernet fixtures. These are **not p
 During integration, the optional verifier initially failed to link because a toolchain SYSTEM DOS preset was not found; its explicit FORMAT DOS response file fixed this. The first old-tool regression fixture used an incorrectly substituted target address; the corrected fixture passed. Initial netstat assertions failed as described above and are not counted as passed. The final production build and listed workload checks completed.
 
 A prior hostname-resolution test used the exact same LLFS executable hash; DNS completed before resident setup code was discarded. The public release does not include that private responder, emulator configuration, licensed OS files or developer script dependencies. Public hardware test instructions are in TESTING.TXT.
+
+## Final licensing rebuild
+
+The Unlicense revision adds documentation and source/license notices to the DOS executables containing Open Watcom runtime code. All application targets and the public verifier rebuilt. The public DOS API test again passed with zero errors and full memory recovery; transfer/HTTP/SNTP and the three-job unloaded RPC regression passed again using the rebuilt files. LLFS remains byte-identical to the diskless Windows 2-tested executable, and Windows host code/data match that tested build apart from defined PE/resource link timestamps. Notice strings were checked in all five runtime-using executables. The JSON lists the final supplied hashes.
